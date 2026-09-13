@@ -1,0 +1,355 @@
+/* global.css */
+/* ===== Design tokens — Cokelat Kertas Tua & Teks Hitam Pekat Tebal ===== */
+:root {
+  --terracotta: #A8421D;
+  --amber: #B45309;
+  --sage: #365344;
+  --cream: #D6C3A5;
+  --ink: #FFFFFF;
+  --muted: #E5E0D8;
+  --border: #8C755B;
+  --danger: #99331C;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --max-width: 480px;
+  --max-width-desktop: 1080px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: linear-gradient(135deg, rgba(60, 40, 25, 0.65), rgba(30, 20, 10, 0.75)), url('/backdrop-ara.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  font-weight: 500;
+  min-height: 100vh;
+}
+
+/* KELAS PENGECUALIAN KHUSUS TEKS PUTIH & SHADOW (Slogan & Judul Spesial) */
+.text-white-override, 
+.text-white-override *, 
+.text-white-override p, 
+.text-white-override span,
+.text-white-override h1,
+.text-white-override h2,
+.text-white-override h3 {
+  color: #FFFFFF !important;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.85), -1px -1px 2px rgba(0, 0, 0, 0.6) !important;
+}
+
+a { text-decoration: none; }
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+}
+
+/* ===== EFEK ANIMASI FADE IN HALAMAN ===== */
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Wadah utama (Berlaku untuk semua halaman pembeli & admin) */
+.page {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 16px;
+  padding-bottom: 84px;
+  animation: pageFadeIn 0.35s ease-out forwards;
+}
+
+@media (min-width: 900px) {
+  .page {
+    max-width: var(--max-width-desktop);
+    padding: 32px 40px;
+    padding-bottom: 40px;
+  }
+}
+
+/* ===== Gaya Card Universal (Pembeli & Admin): Cokelat Kertas Tua Estetik ===== */
+.card {
+  background: rgba(216, 195, 165, 0.92);
+  backdrop-filter: blur(8px);
+  border: 2px solid #8C755B;
+  border-radius: var(--radius);
+  padding: 14px;
+  
+  box-shadow: 
+    0 10px 24px rgba(20, 10, 5, 0.5), 
+    0 3px 8px rgba(20, 10, 5, 0.3),
+    inset 0 1px 2px rgba(255, 245, 230, 0.8),
+    inset 0 -2px 5px rgba(120, 100, 80, 0.6);
+    
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 14px 28px rgba(20, 10, 5, 0.6), 
+    0 5px 10px rgba(20, 10, 5, 0.4),
+    inset 0 1px 2px rgba(255, 245, 230, 0.9),
+    inset 0 -2px 5px rgba(120, 100, 80, 0.6);
+}
+
+/* MENGUNCI TOTAL: Memastikan SEMUA teks di dalam card WAJIB hitam pekat */
+.card,
+.card p, 
+.card span, 
+.card div, 
+.card small,
+.card h1, 
+.card h2, 
+.card h3, 
+.card h4,
+.card label {
+  color: #1A1714 !important;
+}
+
+.card h1, .card h2, .card h3, .card h4 {
+  font-weight: 800 !important;
+}
+
+.card p, .card span, .card div, .card small {
+  font-weight: 600 !important;
+}
+
+/* Mengubah teks tautan/aksi di dalam card menjadi warna terracotta */
+.card a, .card span[style*="color"], .card p > span {
+  color: var(--terracotta) !important;
+}
+
+.btn-primary {
+  background: var(--terracotta);
+  color: #FFF !important; 
+  border: 1px solid #752D12;
+  padding: 12px 18px;
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: 
+    0 4px 12px rgba(168, 66, 29, 0.45),
+    inset 0 1px 2px rgba(255, 255, 255, 0.4),
+    inset 0 -2px 2px rgba(90, 30, 10, 0.4);
+}
+
+.btn-secondary {
+  background: #C7B093;
+  border: 1px solid #8C755B;
+  padding: 12px 18px;
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: 
+    0 3px 8px rgba(60, 45, 30, 0.25),
+    inset 0 1px 2px rgba(255, 245, 230, 0.8),
+    inset 0 -2px 2px rgba(120, 100, 80, 0.5);
+}
+
+.badge {
+  display: inline-block;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 700;
+  border: 1px solid rgba(0,0,0,0.2);
+}
+.badge-tersedia { background: #B1CDBF; box-shadow: inset 0 1px 2px rgba(255,255,255,0.7); }
+.badge-ditawar { background: #E6C887; box-shadow: inset 0 1px 2px rgba(255,255,255,0.7); }
+.badge-deal { background: #DDA38E; box-shadow: inset 0 1px 2px rgba(255,255,255,0.7); }
+.badge-terjual { background: #B8B2A7; box-shadow: inset 0 1px 2px rgba(255,255,255,0.7); }
+
+/* Grid barang */
+.item-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+@media (min-width: 640px) {
+  .item-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 900px) {
+  .item-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* ===== Admin layout: sidebar & floating mobile nav ===== */
+.admin-sidebar { display: none; }
+
+.admin-mobile-floating-wrapper {
+  position: fixed;
+  left: -160px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  transition: left 0.3s ease-in-out;
+  z-index: 1000;
+}
+
+.admin-mobile-floating-wrapper.open {
+  left: 0;
+}
+
+.admin-toggle-btn {
+  position: absolute;
+  right: -36px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 44px;
+  background: rgba(199, 176, 147, 0.95);
+  border: 2px solid #8C755B;
+  border-left: none;
+  border-radius: 0 10px 10px 0;
+  color: #1A1714;
+  font-size: 20px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 4px 2px 8px rgba(20, 10, 5, 0.3);
+}
+
+.admin-bottom-nav {
+  width: 150px;
+  background: rgba(199, 176, 147, 0.96);
+  backdrop-filter: blur(6px);
+  border: 2px solid #8C755B;
+  border-left: none;
+  border-radius: 0 16px 16px 0;
+  padding: 16px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 6px 4px 16px rgba(20, 10, 5, 0.4);
+}
+
+.admin-mobile-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: #1A1714;
+  text-transform: uppercase;
+  margin: 0 0 4px 6px;
+  letter-spacing: 0.5px;
+}
+
+.admin-nav-item-mobile {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1A1714;
+  padding: 8px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  display: block;
+  transition: background 0.2s;
+}
+
+.admin-nav-item-mobile.active { 
+  font-weight: 900; 
+  background: #B59C7D; 
+  border: 1px solid #8C755B;
+}
+
+@media (min-width: 900px) {
+  .admin-mobile-floating-wrapper {
+    display: none;
+  }
+  .admin-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 200px;
+    padding: 24px 0;
+    border-right: 2px solid #8C755B;
+    background: rgba(199, 176, 147, 0.95);
+    backdrop-filter: blur(6px);
+    border-radius: var(--radius);
+    box-shadow: 6px 0 20px rgba(20, 10, 5, 0.3);
+  }
+  .admin-nav-item {
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #1A1714;
+  }
+  .admin-nav-item.active { 
+    font-weight: 900; 
+    background: #B59C7D; 
+    box-shadow: inset 3px 0 0 var(--terracotta); 
+  }
+  .admin-bottom-nav { display: none; }
+}
+
+/* ===== FOKUS BUYER: Mengubah teks judul/keterangan di luar card menjadi putih ===== */
+.buyer-page {
+  color: #FFFFFF;
+}
+
+.buyer-page h1,
+.buyer-page h2,
+.buyer-page h3,
+.buyer-page p:not(.card p),
+.buyer-page span:not(.card span) {
+  color: #FFFFFF;
+}
+
+/* Mengunci teks filter/menu/navigasi buyer agar TETAP HITAM dan TIDAK IKUT PUTIH */
+.buyer-page .filter-btn,
+.buyer-page .category-filter,
+.buyer-page .filter-item,
+.buyer-page .menu-item,
+.buyer-page nav,
+.buyer-page nav *,
+.buyer-page button:not(.btn-primary):not(.btn-secondary),
+.buyer-page .badge-filter {
+  color: #1A1714 !important;
+}
+
+/* ===== Animasi Loading Universal 🤪 ===== */
+@keyframes cartoonBounce {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-8px) rotate(-3deg); }
+  75% { transform: translateY(4px) rotate(3deg); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; scale: 1.05; }
+}
+
+.loading-cartoon-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  gap: 12px;
+  width: 100%;
+}
+
+.loading-box-icon {
+  font-size: 36px;
+  animation: cartoonBounce 0.8s ease-in-out infinite;
+  display: inline-block;
+}
+
+.loading-text {
+  font-weight: 800 !important;
+  color: #fffffe !important;
+  font-size: 14px;
+  animation: pulseGlow 1.2s ease-in-out infinite;
+  letter-spacing: 0.5px;
+  margin: 0;
+  text-align: center;
+}

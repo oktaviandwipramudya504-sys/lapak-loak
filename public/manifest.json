@@ -1,0 +1,15 @@
+{
+  "name": "Lapak Loak",
+  "short_name": "Lapak Loak",
+  "description": "Pasar loak online personal — temukan yang unik, berani tawar, kalau cocok deal.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FDFBF7",
+  "theme_color": "#C85A32",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
