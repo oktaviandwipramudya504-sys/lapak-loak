@@ -41,8 +41,31 @@ export default function AdminOrders() {
         .eq('order_code', orderCode);
 
       if (error) throw error;
+
+      // Cari data order yang bersangkutan untuk mengambil nomor WhatsApp & nama barang
+      const targetOrder = orders.find(o => o.order_code === orderCode);
+      if (targetOrder && targetOrder.buyer_whatsapp) {
+        let cleanWa = targetOrder.buyer_whatsapp.replace(/\D/g, '');
+        if (cleanWa.startsWith('0')) {
+          cleanWa = '62' + cleanWa.slice(1);
+        }
+
+        const itemName = targetOrder.items?.name || 'Barang Loak';
+        let statusText = status.replace('-', ' ');
+        
+        // Buat pesan WhatsApp otomatis sesuai status
+        let pesanWa = `Halo kak ${targetOrder.buyer_name || ''}, status pesanan Anda (${itemName}) dengan kode ${orderCode} kini telah diperbarui menjadi: *${statusText.toUpperCase()}*.`;
+        if (currentResi && (status === 'dikirim' || status === 'selesai')) {
+          pesanWa += ` Nomor resi pengiriman Anda: *${currentResi}*.`;
+        }
+        pesanWa += ` Terima kasih sudah berbelanja di Lapak Ara!`;
+
+        const urlWa = `https://wa.me/${cleanWa}?text=${encodeURIComponent(pesanWa)}`;
+        window.open(urlWa, '_blank');
+      }
+
       loadOrders();
-      alert('Status dan resi pesanan berhasil diperbarui!');
+      alert('Status dan resi pesanan berhasil diperbarui, serta membuka WhatsApp untuk mengirim notifikasi ke pembeli!');
     } catch (err) {
       alert('Gagal memperbarui status pesanan: ' + err.message);
     }
@@ -194,6 +217,6 @@ export default function AdminOrders() {
           })}
         </div>
       )}
-    </div>
+   </div>
   );
 }

@@ -75,7 +75,7 @@ export default function Negotiation() {
       setTimeout(() => setJustSent(false), 3000); // Teks status terkirim hilang otomatis setelah 3 detik
 
       // Integrasi instan ke WhatsApp Admin
-      const nomorAdmin = "62895358388400";
+      const nomorAdmin = "62882006296949";
       const pesan = `Halo Admin Lapak Loak, saya baru saja mengirim tawaran sebesar Rp${Number(nominalTawaran).toLocaleString('id-ID')} di ruang tawar. Mohon dicek ya kak!`;
       const urlWa = `https://wa.me/${nomorAdmin}?text=${encodeURIComponent(pesan)}`;
       window.open(urlWa, '_blank');

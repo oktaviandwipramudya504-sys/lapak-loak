@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient.js';
 import Loader from '../../components/Loader';
 
-const FILTERS = ['Semua', 'Baru nongol', 'Lagi rame', 'Lagi ditawar', 'Di bawah 100rb'];
+const FILTERS = ['Semua', 'Terbaru', 'Sedang Ramai', 'Banyak Ditawar', 'Di bawah 100rb'];
 
 // Data cadangan (fallback) jika belum ada iklan/rekomendasi yang dibuat admin di database
 const FALLBACK_AFFILIATES = [
@@ -54,9 +54,9 @@ export default function Home() {
 
   const filteredItems = items.filter((item) => {
     if (activeFilter === 'Semua') return true;
-    if (activeFilter === 'Baru nongol') return item.status === 'tersedia';
-    if (activeFilter === 'Lagi rame') return item.status === 'tersedia' || item.is_popular;
-    if (activeFilter === 'Lagi ditawar') return item.status === 'ditawar';
+    if (activeFilter === 'Terbaru') return item.status === 'tersedia';
+    if (activeFilter === 'Sedang Ramai') return item.status === 'tersedia' || item.is_popular;
+    if (activeFilter === 'Banyak Ditawar') return item.status === 'ditawar';
     if (activeFilter === 'Di bawah 100rb') return Number(item.starting_price) < 100000;
     return true;
   });

@@ -10,8 +10,8 @@ export default function AdminAffiliates() {
     description: '',
     affiliate_url: ''
   });
-  const [imageFile, setImageFile] = useState(null);
-  const [videoFile, setVideoFile] = useState(null);
+  const [imageFiles, setImageFiles] = useState([]);
+  const [videoFiles, setVideoFiles] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -34,7 +34,6 @@ export default function AdminAffiliates() {
   }
 
   async function uploadFileToStorage(file, folder) {
-    if (!file) return null;
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
     const filePath = `${folder}/${fileName}`;
@@ -62,29 +61,22 @@ export default function AdminAffiliates() {
 
     setSubmitting(true);
     try {
-      let imageUrl = null;
-      if (imageFile) {
-        imageUrl = await uploadFileToStorage(imageFile, 'images');
-      }
-
-      let videoUrl = null;
-      if (videoFile) {
-        videoUrl = await uploadFileToStorage(videoFile, 'videos');
-      }
+      const imageUrls = await Promise.all(imageFiles.map((f) => uploadFileToStorage(f, 'images')));
+      const videoUrls = await Promise.all(videoFiles.map((f) => uploadFileToStorage(f, 'videos')));
 
       const { error } = await supabase.from('affiliates').insert({
         title: form.title,
         description: form.description,
-        image_url: imageUrl,
-        video_url: videoUrl,
+        images: imageUrls,
+        videos: videoUrls,
         affiliate_url: form.affiliate_url,
       });
 
       if (error) throw error;
 
       setForm({ title: '', description: '', affiliate_url: '' });
-      setImageFile(null);
-      setVideoFile(null);
+      setImageFiles([]);
+      setVideoFiles([]);
       fetchAffiliates();
       alert('Iklan rekomendasi berhasil ditayangkan!');
     } catch (err) {
@@ -97,7 +89,7 @@ export default function AdminAffiliates() {
 
   async function handleDelete(id) {
     if (!confirm('Yakin ingin menghapus rekomendasi ini?')) return;
-    
+
     const { error } = await supabase.from('affiliates').delete().eq('id', id);
     if (!error) {
       setAffiliates(affiliates.filter(item => item.id !== id));
@@ -148,23 +140,31 @@ export default function AdminAffiliates() {
         </div>
 
         <div>
-          <label style={{ fontSize: 12, fontWeight: '700', display: 'block', marginBottom: 4 }}>Upload Foto (Dari Galeri HP):</label>
+          <label style={{ fontSize: 12, fontWeight: '700', display: 'block', marginBottom: 4 }}>Upload Foto (bisa pilih lebih dari 1, dari Galeri HP):</label>
           <input 
             type="file" 
             accept="image/*"
-            onChange={(e) => setImageFile(e.target.files[0])} 
+            multiple
+            onChange={(e) => setImageFiles(Array.from(e.target.files || []))} 
             style={{ width: '100%', padding: 8, background: '#FFF', borderRadius: 6, border: '1px solid #8C755B', fontSize: 12 }} 
           />
+          {imageFiles.length > 0 && (
+            <p style={{ fontSize: 12, color: 'var(--sage)', margin: '4px 0 0' }}>{imageFiles.length} foto dipilih</p>
+          )}
         </div>
 
         <div>
-          <label style={{ fontSize: 12, fontWeight: '700', display: 'block', marginBottom: 4 }}>Upload Video (Opsional, dari HP):</label>
+          <label style={{ fontSize: 12, fontWeight: '700', display: 'block', marginBottom: 4 }}>Upload Video (bisa pilih lebih dari 1, opsional, dari HP):</label>
           <input 
             type="file" 
             accept="video/*"
-            onChange={(e) => setVideoFile(e.target.files[0])} 
+            multiple
+            onChange={(e) => setVideoFiles(Array.from(e.target.files || []))} 
             style={{ width: '100%', padding: 8, background: '#FFF', borderRadius: 6, border: '1px solid #8C755B', fontSize: 12 }} 
           />
+          {videoFiles.length > 0 && (
+            <p style={{ fontSize: 12, color: 'var(--sage)', margin: '4px 0 0' }}>{videoFiles.length} video dipilih</p>
+          )}
         </div>
         
         <div>
@@ -198,11 +198,13 @@ export default function AdminAffiliates() {
         <p style={{ fontSize: 12, opacity: 0.7 }}>Belum ada rekomendasi yang dibuat admin.</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {affiliates.map((item) => (
+          {affiliates.map((item) => {
+            const thumb = item.images?.[0] ?? item.image_url;
+            return (
             <div key={item.id} className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: '#FFF', border: '1px solid #8C755B', borderRadius: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, overflow: 'hidden' }}>
-                {item.image_url ? (
-                  <img src={item.image_url} alt={item.title} style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 6 }} />
+                {thumb ? (
+                  <img src={thumb} alt={item.title} style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 6 }} />
                 ) : (
                   <div style={{ width: 50, height: 50, background: '#D8C3A5', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10 }}>No Img</div>
                 )}
@@ -217,7 +219,8 @@ export default function AdminAffiliates() {
                 Hapus
               </button>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
