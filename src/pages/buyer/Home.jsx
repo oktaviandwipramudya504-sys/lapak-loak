@@ -210,7 +210,7 @@ export default function Home() {
                   borderRadius: '4px'
                 }}
               >
-                Cek aja jangan malu-malu
+                Cek Link Di Sini
               </a>
             )}
           </div>
