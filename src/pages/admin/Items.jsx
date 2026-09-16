@@ -7,7 +7,7 @@ export default function AdminItems() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: '', starting_price: '', condition_notes: '' });
   const [photoFiles, setPhotoFiles] = useState([]);
-  const [videoFile, setVideoFile] = useState(null);
+  const [videoFiles, setVideoFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [loadingItems, setLoadingItems] = useState(true);
   const [errMsg, setErrMsg] = useState('');
@@ -39,18 +39,18 @@ export default function AdminItems() {
     setErrMsg('');
     try {
       const photoUrls = await Promise.all(photoFiles.map((f) => uploadFile(f, 'photos')));
-      const videoUrl = videoFile ? await uploadFile(videoFile, 'videos') : null;
+      const videoUrls = await Promise.all(videoFiles.map((f) => uploadFile(f, 'videos')));
 
       await supabase.from('items').insert({
         ...form,
         photos: photoUrls,
-        video_url: videoUrl,
+        videos: videoUrls,
         status: 'tersedia',
       });
 
       setForm({ name: '', starting_price: '', condition_notes: '' });
       setPhotoFiles([]);
-      setVideoFile(null);
+      setVideoFiles([]);
       setShowForm(false);
       loadItems();
     } catch (err) {
@@ -62,7 +62,7 @@ export default function AdminItems() {
 
   async function hapusBarang(id) {
     if (!window.confirm('Yakin ingin menghapus barang ini dari lapak?')) return;
-    
+
     try {
       const { error } = await supabase.from('items').delete().eq('id', id);
       if (error) throw error;
@@ -74,12 +74,12 @@ export default function AdminItems() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{ 
-        background: '#fdfbf7', 
-        border: '2px solid #1A1714', 
-        boxShadow: '4px 4px 0px #1A1714', 
-        padding: '16px 20px', 
-        borderRadius: '8px' 
+      <div style={{
+        background: '#fdfbf7',
+        border: '2px solid #1A1714',
+        boxShadow: '4px 4px 0px #1A1714',
+        padding: '16px 20px',
+        borderRadius: '8px'
       }}>
         <h1 style={{ fontSize: 20, fontWeight: '800', margin: 0, color: '#1A1714', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
           Adol Opo meneh?
@@ -96,13 +96,15 @@ export default function AdminItems() {
           <textarea placeholder="Catatan kondisi (jujur ya)" value={form.condition_notes} onChange={(e) => setForm({ ...form, condition_notes: e.target.value })} />
 
           <div>
-            <label style={{ fontSize: 12, color: 'var(--muted)' }}>Foto barang (bisa pilih lebih dari 1, atau langsung dari kamera HP)</label>
+            <label style={{ fontSize: 12, color: 'var(--muted)' }}>Foto barang (bisa pilih lebih dari 1, dari galeri HP)</label>
             <input
               type="file"
               accept="image/*"
               multiple
-              capture="environment"
-              onChange={(e) => setPhotoFiles(Array.from(e.target.files))}
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                if (files.length > 0) setPhotoFiles(files);
+              }}
             />
             {photoFiles.length > 0 && (
               <p style={{ fontSize: 12, color: 'var(--sage)' }}>{photoFiles.length} foto dipilih</p>
@@ -110,14 +112,19 @@ export default function AdminItems() {
           </div>
 
           <div>
-            <label style={{ fontSize: 12, color: 'var(--muted)' }}>Video kondisi (opsional)</label>
+            <label style={{ fontSize: 12, color: 'var(--muted)' }}>Video kondisi (bisa pilih lebih dari 1, opsional, dari galeri HP)</label>
             <input
               type="file"
               accept="video/*"
-              capture="environment"
-              onChange={(e) => setVideoFile(e.target.files[0] ?? null)}
+              multiple
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                if (files.length > 0) setVideoFiles(files);
+              }}
             />
-            {videoFile && <p style={{ fontSize: 12, color: 'var(--sage)' }}>{videoFile.name}</p>}
+            {videoFiles.length > 0 && (
+              <p style={{ fontSize: 12, color: 'var(--sage)' }}>{videoFiles.length} video dipilih</p>
+            )}
           </div>
 
           {errMsg && <p style={{ color: 'var(--danger)', fontSize: 13 }}>{errMsg}</p>}
@@ -149,8 +156,8 @@ export default function AdminItems() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span className={`badge badge-${item.status}`}>{item.status}</span>
-                <button 
-                  onClick={() => hapusBarang(item.id)} 
+                <button
+                  onClick={() => hapusBarang(item.id)}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, padding: 4 }}
                   title="Hapus barang"
                 >
