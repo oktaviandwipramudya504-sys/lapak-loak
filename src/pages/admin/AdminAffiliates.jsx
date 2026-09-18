@@ -4,221 +4,139 @@ import Loader from '../../components/Loader';
 
 export default function AdminAffiliates() {
   const [affiliates, setAffiliates] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({
-    title: '',
-    description: '',
-    affiliate_url: ''
-  });
-  const [imageFiles, setImageFiles] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ title: '', affiliate_url: '', description: '' });
+  const [photoFiles, setPhotoFiles] = useState([]);
   const [videoFiles, setVideoFiles] = useState([]);
-  const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [errMsg, setErrMsg] = useState('');
 
-  useEffect(() => {
-    fetchAffiliates();
-  }, []);
+  useEffect(() => { loadAffiliates(); }, []);
 
-  async function fetchAffiliates() {
+  async function loadAffiliates() {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('affiliates')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (!error) setAffiliates(data ?? []);
+    const { data, error } = await supabase.from('affiliates').select('*').order('created_at', { ascending: false });
+    if (error) {
+      setErrMsg('Gagal memuat data: ' + error.message);
+    }
+    setAffiliates(data ?? []);
     setLoading(false);
   }
 
-  function updateField(field) {
-    return (e) => setForm({ ...form, [field]: e.target.value });
-  }
-
-  async function uploadFileToStorage(file, folder) {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
-    const filePath = `${folder}/${fileName}`;
-
-    // Menggunakan bucket 'media' sesuai yang sudah kamu buat di Supabase
-    const { error: uploadError } = await supabase.storage
-      .from('media')
-      .upload(filePath, file);
-
-    if (uploadError) {
-      console.error('Gagal upload file:', uploadError);
-      throw uploadError;
-    }
-
-    const { data } = supabase.storage.from('media').getPublicUrl(filePath);
+  async function uploadFile(file, folder) {
+    const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, '-');
+    const path = `${folder}/${Date.now()}-${cleanName}`;
+    const { error } = await supabase.storage.from('media').upload(path, file);
+    if (error) throw error;
+    const { data } = supabase.storage.from('media').getPublicUrl(path);
     return data.publicUrl;
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  async function tambahAffiliate() {
     if (!form.title || !form.affiliate_url) {
-      alert('Nama produk dan Link Tujuan (URL) wajib diisi ya, bos!');
+      setErrMsg('Judul dan Link Affiliate wajib diisi.');
       return;
     }
-
-    setSubmitting(true);
+    setUploading(true);
+    setErrMsg('');
     try {
-      const imageUrls = await Promise.all(imageFiles.map((f) => uploadFileToStorage(f, 'images')));
-      const videoUrls = await Promise.all(videoFiles.map((f) => uploadFileToStorage(f, 'videos')));
+      const photoUrls = await Promise.all(photoFiles.map((f) => uploadFile(f, 'affiliate_photos')));
+      const videoUrls = await Promise.all(videoFiles.map((f) => uploadFile(f, 'affiliate_videos')));
 
       const { error } = await supabase.from('affiliates').insert({
-        title: form.title,
-        description: form.description,
-        images: imageUrls,
+        ...form,
+        photos: photoUrls,
         videos: videoUrls,
-        affiliate_url: form.affiliate_url,
       });
 
       if (error) throw error;
 
-      setForm({ title: '', description: '', affiliate_url: '' });
-      setImageFiles([]);
+      setForm({ title: '', affiliate_url: '', description: '' });
+      setPhotoFiles([]);
       setVideoFiles([]);
-      fetchAffiliates();
-      alert('Iklan rekomendasi berhasil ditayangkan!');
+      setShowForm(false);
+      loadAffiliates();
     } catch (err) {
-      console.error('Gagal menyimpan:', err);
-      alert('Terjadi kesalahan saat menyimpan data atau upload file.');
+      setErrMsg('Gagal menyimpan: ' + err.message);
     } finally {
-      setSubmitting(false);
+      setUploading(false);
     }
   }
 
-  async function handleDelete(id) {
-    if (!confirm('Yakin ingin menghapus rekomendasi ini?')) return;
-
+  async function hapusAffiliate(id) {
+    if (!window.confirm('Yakin mau hapus affiliate ini?')) return;
     const { error } = await supabase.from('affiliates').delete().eq('id', id);
-    if (!error) {
-      setAffiliates(affiliates.filter(item => item.id !== id));
-    } else {
-      alert('Gagal menghapus data.');
+    if (error) {
+      setErrMsg('Gagal menghapus: ' + error.message);
+      return;
     }
+    loadAffiliates();
   }
-
-  if (loading) return <div className="page"><Loader text="Memuat data rekomendasi..." /></div>;
 
   return (
-   <div className="page" style={{ maxWidth: 600, margin: '20px auto', padding: 16 }}>
-  <div style={{ 
-    background: '#fdfbf7', 
-    border: '2px solid #1A1714', 
-    boxShadow: '4px 4px 0px #1A1714', 
-    padding: '16px 20px', 
-    borderRadius: '8px',
-    marginBottom: 16 
-  }}>
-    <h1 style={{ fontSize: 20, fontWeight: '800', margin: 0, color: '#1A1714', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-      Iklan Saksenengku! 🏷️
-    </h1>
-  </div>
-
-      <form onSubmit={handleSubmit} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24, padding: 16, background: '#FFF5E6', border: '2px solid #8C755B' }}>
-        <h2 style={{ fontSize: 14, fontWeight: '800', margin: 0 }}>Buat Rekomendasi Baru</h2>
-        
-        <div>
-          <label style={{ fontSize: 12, fontWeight: '700', display: 'block', marginBottom: 4 }}>Nama Produk / Judul Iklan:</label>
-          <input 
-            placeholder="Contoh: Outfit Estetik Partner" 
-            value={form.title} 
-            onChange={updateField('title')} 
-            style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #8C755B', background: '#FFF' }} 
-          />
-        </div>
-        
-        <div>
-          <label style={{ fontSize: 12, fontWeight: '700', display: 'block', marginBottom: 4 }}>Deskripsi Singkat:</label>
-          <textarea 
-            placeholder="Tulis deskripsi menarik di sini..." 
-            value={form.description} 
-            onChange={updateField('description')} 
-            rows={3}
-            style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #8C755B', background: '#FFF', fontFamily: 'inherit' }} 
-          />
-        </div>
-
-        <div>
-          <label style={{ fontSize: 12, fontWeight: '700', display: 'block', marginBottom: 4 }}>Upload Foto (bisa pilih lebih dari 1, dari Galeri HP):</label>
-          <input 
-            type="file" 
-            accept="image/*"
-            multiple
-            onChange={(e) => setImageFiles(Array.from(e.target.files || []))} 
-            style={{ width: '100%', padding: 8, background: '#FFF', borderRadius: 6, border: '1px solid #8C755B', fontSize: 12 }} 
-          />
-          {imageFiles.length > 0 && (
-            <p style={{ fontSize: 12, color: 'var(--sage)', margin: '4px 0 0' }}>{imageFiles.length} foto dipilih</p>
-          )}
-        </div>
-
-        <div>
-          <label style={{ fontSize: 12, fontWeight: '700', display: 'block', marginBottom: 4 }}>Upload Video (bisa pilih lebih dari 1, opsional, dari HP):</label>
-          <input 
-            type="file" 
-            accept="video/*"
-            multiple
-            onChange={(e) => setVideoFiles(Array.from(e.target.files || []))} 
-            style={{ width: '100%', padding: 8, background: '#FFF', borderRadius: 6, border: '1px solid #8C755B', fontSize: 12 }} 
-          />
-          {videoFiles.length > 0 && (
-            <p style={{ fontSize: 12, color: 'var(--sage)', margin: '4px 0 0' }}>{videoFiles.length} video dipilih</p>
-          )}
-        </div>
-        
-        <div>
-          <label style={{ fontSize: 12, fontWeight: '700', display: 'block', marginBottom: 4 }}>Link Tujuan (URL Website / Shopee / dll):</label>
-          <input 
-            placeholder="https://..." 
-            value={form.affiliate_url} 
-            onChange={updateField('affiliate_url')} 
-            style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #8C755B', background: '#FFF' }} 
-          />
-        </div>
-        
-        <button type="submit" className="btn-primary" disabled={submitting} style={{ marginTop: 6 }}>
-          {submitting ? 'Sedang Mengunggah & Menyimpan...' : 'Simpan & Tayangkan Iklan'}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div className="card" style={{ background: '#fdfbf7', border: '2px solid #1A1714', padding: '16px 20px' }}>
+        <h1 style={{ fontSize: 20, fontWeight: '800', margin: 0 }}>Kelola Affiliate</h1>
+        <button className="btn-primary" onClick={() => setShowForm(!showForm)} style={{ marginTop: 10 }}>
+          {showForm ? 'Tutup Form' : '+ Tambah Affiliate'}
         </button>
-      </form>
+      </div>
 
-     <div style={{ 
-  background: '#fdfbf7', 
-  border: '2px solid #1A1714', 
-  boxShadow: '4px 4px 0px #1A1714', 
-  padding: '16px 20px', 
-  borderRadius: '8px',
-  marginBottom: 16 
-}}>
-  <h2 style={{ fontSize: 16, fontWeight: '800', margin: 0, color: '#1A1714', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-    Iklanku Saiki Iki
-  </h2>
-</div>
-      {affiliates.length === 0 ? (
-        <p style={{ fontSize: 12, opacity: 0.7 }}>Belum ada rekomendasi yang dibuat admin.</p>
+      {showForm && (
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <input placeholder="Nama Barang" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+          <input placeholder="Link Affiliate URL" value={form.affiliate_url} onChange={(e) => setForm({ ...form, affiliate_url: e.target.value })} />
+          <textarea placeholder="Deskripsi produk" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+
+          <div>
+            <label style={{ fontSize: 12 }}>Foto Produk (Bisa pilih banyak dari galeri)</label>
+            <input type="file" multiple accept="image/*" onChange={(e) => setPhotoFiles(Array.from(e.target.files || []))} />
+          </div>
+
+          <div>
+            <label style={{ fontSize: 12 }}>Video Produk (Bisa pilih banyak dari galeri)</label>
+            <input type="file" multiple accept="video/*" onChange={(e) => setVideoFiles(Array.from(e.target.files || []))} />
+          </div>
+
+          {errMsg && <p style={{ color: 'red', fontSize: 13 }}>{errMsg}</p>}
+          {uploading ? <Loader text="Mengunggah..."/> : <button className="btn-primary" onClick={tambahAffiliate}>Simpan Affiliate</button>}
+        </div>
+      )}
+
+      {loading ? (
+        <Loader text="Memuat..." />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {affiliates.map((item) => {
-            const thumb = item.images?.[0] ?? item.image_url;
+          {affiliates.length === 0 && (
+            <p style={{ fontSize: 13, opacity: 0.7 }}>Belum ada affiliate.</p>
+          )}
+          {affiliates.map((aff) => {
+            const thumb = aff.photos?.[0] || aff.image_url || aff.image || null;
             return (
-            <div key={item.id} className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: '#FFF', border: '1px solid #8C755B', borderRadius: 8 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, overflow: 'hidden' }}>
-                {thumb ? (
-                  <img src={thumb} alt={item.title} style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 6 }} />
-                ) : (
-                  <div style={{ width: 50, height: 50, background: '#D8C3A5', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10 }}>No Img</div>
-                )}
-                <div style={{ overflow: 'hidden' }}>
-                  <h3 style={{ fontSize: 13, fontWeight: '700', margin: 0, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{item.title}</h3>
-                  <a href={item.affiliate_url} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: '#0066cc', textDecoration: 'underline' }}>
-                    Link: {item.affiliate_url}
-                  </a>
+              <div key={aff.id} className="card" style={{ padding: 12, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <div style={{ width: 56, height: 56, borderRadius: 6, overflow: 'hidden', background: '#EEE7DA', flexShrink: 0 }}>
+                  {thumb ? (
+                    <img src={thumb} alt={aff.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: '#999' }}>
+                      No Foto
+                    </div>
+                  )}
                 </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontWeight: 700, margin: 0 }}>{aff.title}</p>
+                  <p style={{ fontSize: 12, opacity: 0.7, margin: '4px 0 0' }}>
+                    {aff.photos?.length ?? 0} foto &bull; {aff.videos?.length ?? 0} video
+                  </p>
+                </div>
+                <button
+                  onClick={() => hapusAffiliate(aff.id)}
+                  style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 10px', fontSize: 12, cursor: 'pointer' }}
+                >
+                  Hapus
+                </button>
               </div>
-              <button onClick={() => handleDelete(item.id)} style={{ background: '#d9534f', color: '#FFF', border: 'none', padding: '6px 10px', borderRadius: 6, fontSize: 11, cursor: 'pointer', flexShrink: 0 }}>
-                Hapus
-              </button>
-            </div>
             );
           })}
         </div>

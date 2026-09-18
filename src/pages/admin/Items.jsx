@@ -16,8 +16,22 @@ export default function AdminItems() {
 
   async function loadItems() {
     setLoadingItems(true);
-    const { data } = await supabase.from('items').select('*').order('created_at', { ascending: false });
-    setItems(data ?? []);
+    // Ambil data items beserta data negotiations untuk mendeteksi apakah barang sedang ditawar/nego
+    const { data: itemData } = await supabase.from('items').select('*').order('created_at', { ascending: false });
+    const { data: negoData } = await supabase.from('negotiations').select('*');
+
+    // Gabungkan informasi status nego ke item jika ada negosiasi aktif/berlangsung
+    const merged = (itemData ?? []).map((item) => {
+      const activeNego = (negoData ?? []).find(
+        (n) => n.item_id === item.id && n.status === 'aktif'
+      );
+      return {
+        ...item,
+        isNegotiating: !!activeNego,
+      };
+    });
+
+    setItems(merged);
     setLoadingItems(false);
   }
 
@@ -54,118 +68,119 @@ export default function AdminItems() {
       setShowForm(false);
       loadItems();
     } catch (err) {
-      setErrMsg('Gagal upload: ' + err.message + ' (cek bucket "media" sudah dibuat & public)');
+      setErrMsg('Gagal upload: ' + err.message);
     } finally {
       setUploading(false);
     }
   }
 
   async function hapusBarang(id) {
-    if (!window.confirm('Yakin ingin menghapus barang ini dari lapak?')) return;
-
-    try {
-      const { error } = await supabase.from('items').delete().eq('id', id);
-      if (error) throw error;
+    if (!window.confirm('Yakin ingin menghapus barang ini?')) return;
+    const { error } = await supabase.from('items').delete().eq('id', id);
+    if (!error) {
       loadItems();
-    } catch (err) {
-      alert('Gagal menghapus barang: ' + err.message);
+    } else {
+      alert('Gagal menghapus: ' + error.message);
     }
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{
-        background: '#fdfbf7',
-        border: '2px solid #1A1714',
-        boxShadow: '4px 4px 0px #1A1714',
-        padding: '16px 20px',
-        borderRadius: '8px'
-      }}>
-        <h1 style={{ fontSize: 20, fontWeight: '800', margin: 0, color: '#1A1714', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-          Adol Opo meneh?
-        </h1>
-        <button className="btn-primary" onClick={() => setShowForm(!showForm)}>
-          {showForm ? 'Tutup Form' : '+ Tambah'}
+      <div className="card" style={{ background: '#fdfbf7', border: '2px solid #1A1714', padding: '16px 20px' }}>
+        <h1 style={{ fontSize: 20, fontWeight: '800', margin: 0 }}>Kelola Barang</h1>
+        <button className="btn-primary" onClick={() => setShowForm(!showForm)} style={{ marginTop: 10 }}>
+          {showForm ? 'Tutup Form' : '+ Tambah Barang'}
         </button>
       </div>
 
       {showForm && (
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 14 }}>
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <input placeholder="Nama barang" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           <input placeholder="Harga awal" type="number" value={form.starting_price} onChange={(e) => setForm({ ...form, starting_price: e.target.value })} />
-          <textarea placeholder="Catatan kondisi (jujur ya)" value={form.condition_notes} onChange={(e) => setForm({ ...form, condition_notes: e.target.value })} />
+          <textarea placeholder="Catatan kondisi" value={form.condition_notes} onChange={(e) => setForm({ ...form, condition_notes: e.target.value })} />
 
           <div>
-            <label style={{ fontSize: 12, color: 'var(--muted)' }}>Foto barang (bisa pilih lebih dari 1, dari galeri HP)</label>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={(e) => {
-                const files = Array.from(e.target.files || []);
-                if (files.length > 0) setPhotoFiles(files);
-              }}
-            />
-            {photoFiles.length > 0 && (
-              <p style={{ fontSize: 12, color: 'var(--sage)' }}>{photoFiles.length} foto dipilih</p>
-            )}
+            <label style={{ fontSize: 12 }}>Foto Barang (Bisa pilih banyak dari galeri)</label>
+            <input type="file" multiple accept="image/*" onChange={(e) => setPhotoFiles(Array.from(e.target.files || []))} />
           </div>
 
           <div>
-            <label style={{ fontSize: 12, color: 'var(--muted)' }}>Video kondisi (bisa pilih lebih dari 1, opsional, dari galeri HP)</label>
-            <input
-              type="file"
-              accept="video/*"
-              multiple
-              onChange={(e) => {
-                const files = Array.from(e.target.files || []);
-                if (files.length > 0) setVideoFiles(files);
-              }}
-            />
-            {videoFiles.length > 0 && (
-              <p style={{ fontSize: 12, color: 'var(--sage)' }}>{videoFiles.length} video dipilih</p>
-            )}
+            <label style={{ fontSize: 12 }}>Video Kondisi (Bisa pilih banyak dari galeri)</label>
+            <input type="file" multiple accept="video/*" onChange={(e) => setVideoFiles(Array.from(e.target.files || []))} />
           </div>
 
-          {errMsg && <p style={{ color: 'var(--danger)', fontSize: 13 }}>{errMsg}</p>}
-
-          {uploading ? (
-            <Loader text="Lagi ngunggah foto & data barang ke lapak..." />
-          ) : (
-            <button className="btn-primary" onClick={tambahBarang}>
-              Simpan Barang
-            </button>
-          )}
+          {errMsg && <p style={{ color: 'red', fontSize: 13 }}>{errMsg}</p>}
+          {uploading ? <Loader text="Mengunggah..." /> : <button className="btn-primary" onClick={tambahBarang}>Simpan Barang</button>}
         </div>
       )}
 
+      {/* Menampilkan daftar barang di POV Admin */}
       {loadingItems ? (
-        <Loader text="Lagi bongkar kardus inventaris barang..." />
+        <Loader text="Memuat daftar barang..." />
+      ) : items.length === 0 ? (
+        <div className="card" style={{ textAlign: 'center', padding: '20px' }}>
+          <p style={{ margin: 0, fontSize: 13, color: 'var(--muted)' }}>Belum ada barang.</p>
+        </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {items.map((item) => (
-            <div key={item.id} className="card" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              <div style={{ width: 48, height: 48, borderRadius: 8, background: '#EEE7DA', overflow: 'hidden', flexShrink: 0 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {items.map((item) => {
+            const isTerjual = item.status === 'terjual';
+            const isNego = item.isNegotiating;
+
+            return (
+              <div 
+                key={item.id} 
+                className="card" 
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 12, 
+                  padding: 10,
+                  background: isTerjual ? '#f3f4f6' : '#fdfbf7'
+                }}
+              >
                 {item.photos?.[0] && (
-                  <img src={item.photos[0]} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={item.photos[0]} alt={item.name} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 4 }} />
                 )}
-              </div>
-              <div style={{ flex: 1 }}>
-                <p style={{ margin: 0, fontSize: 14, fontWeight: 700 }}>{item.name}</p>
-                <p style={{ margin: 0, fontSize: 12, color: 'var(--muted)' }}>Rp{Number(item.starting_price).toLocaleString('id-ID')}</p>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span className={`badge badge-${item.status}`}>{item.status}</span>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{item.name}</p>
+                  <p style={{ fontSize: 13, margin: '2px 0 0' }}>Rp{Number(item.starting_price).toLocaleString('id-ID')}</p>
+                  
+                  {/* Status otomatis pada informasi barang */}
+                  <div style={{ display: 'flex', gap: 6, marginTop: 4, alignItems: 'center' }}>
+                    {isTerjual ? (
+                      <span style={{ fontSize: 11, background: '#ef4444', color: '#fff', padding: '2px 6px', borderRadius: 4, fontWeight: 'bold' }}>
+                        Terjual
+                      </span>
+                    ) : isNego ? (
+                      <span style={{ fontSize: 11, background: '#f59e0b', color: '#fff', padding: '2px 6px', borderRadius: 4, fontWeight: 'bold' }}>
+                        Amankan
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: 11, color: 'var(--muted)' }}>Status: {item.status}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Tombol Hapus di sebelah kanan */}
                 <button
                   onClick={() => hapusBarang(item.id)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, padding: 4 }}
-                  title="Hapus barang"
+                  style={{
+                    background: '#ef4444',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '8px 12px',
+                    borderRadius: '4px',
+                    fontSize: 12,
+                    fontWeight: 'bold',
+                    cursor: 'pointer'
+                  }}
                 >
-                  🗑️
+                  Hapus
                 </button>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

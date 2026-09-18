@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient.js';
 import Loader from '../../components/Loader';
 
 export default function AdminDashboard() {
   const [counts, setCounts] = useState({ tawaranBaru: 0, nungguBayar: 0, perluDikirim: 0, selesai: 0 });
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function loadCounts() {
       setLoading(true);
-      // TODO: ganti dengan query agregasi yang lebih efisien (RPC/count) di Supabase.
       const [{ count: tawaranBaru }, { count: nungguBayar }, { count: perluDikirim }, { count: selesai }] =
         await Promise.all([
           supabase.from('negotiations').select('*', { count: 'exact', head: true }).eq('status', 'aktif'),
@@ -23,6 +24,15 @@ export default function AdminDashboard() {
     loadCounts();
   }, []);
 
+  // Fungsi saat kartu diklik disesuaikan dengan path rute di AdminLayout (MENU)
+  function handleCardClick(label) {
+    if (label === 'Tawaran baru') {
+      navigate('/admin/negosiasi'); // Mengarah ke menu Nyang-Nyangan
+    } else {
+      navigate('/admin/pesanan'); // Mengarah ke menu Pesanan Iki (Nunggu bayar, Perlu dikirim, Selesai)
+    }
+  }
+
   const cards = [
     ['Tawaran baru', counts.tawaranBaru],
     ['Nunggu bayar', counts.nungguBayar],
@@ -30,7 +40,7 @@ export default function AdminDashboard() {
     ['Selesai', counts.selesai],
   ];
 
- return (
+  return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ 
         background: '#fdfbf7', 
@@ -50,7 +60,12 @@ export default function AdminDashboard() {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
           {cards.map(([label, value]) => (
-            <div key={label} className="card">
+            <div 
+              key={label} 
+              className="card" 
+              onClick={() => handleCardClick(label)}
+              style={{ cursor: 'pointer', transition: 'transform 0.1s ease' }}
+            >
               <p style={{ fontSize: 12, color: 'var(--muted)', margin: 0 }}>{label}</p>
               <p style={{ fontSize: 24, fontWeight: 600, margin: '4px 0 0' }}>{value}</p>
             </div>

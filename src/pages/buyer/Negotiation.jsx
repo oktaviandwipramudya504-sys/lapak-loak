@@ -100,30 +100,39 @@ export default function Negotiation() {
             <p style={{ fontSize: '11px', marginTop: '2px', color: '#1A1714', opacity: 0.85 }}>Mulai tawar harga barang impianmu sekarang.</p>
           </div>
         ) : (
-          offers.map((o) => (
-            <div
-              key={o.id}
-              className="card"
-              style={{
-                alignSelf: o.sender === 'buyer' ? 'flex-end' : 'flex-start',
-                backgroundColor: o.sender === 'buyer' ? 'var(--terracotta)' : '#D8C3A5',
-                color: o.sender === 'buyer' ? '#FFF' : '#1A1714',
-                maxWidth: '75%',
-                padding: '10px 14px',
-                borderRadius: 12,
-                fontSize: 14,
-                boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                border: o.sender === 'buyer' ? 'none' : '2px solid #8C755B'
-              }}
-            >
-              <div style={{ fontSize: 10, opacity: 0.85, marginBottom: 2, fontWeight: '700' }}>
-                {o.sender === 'buyer' ? 'Kamu' : 'Penjual'}
+          offers.map((o, index) => {
+            // BAGIAN YANG DISESUAIKAN: 
+            // Jika ini pesan pertama (index 0) dalam riwayat tawar, pastikan tampil sebagai Penjual.
+            // Pesan berikutnya (index > 0) mengikuti pengirim aslinya ('buyer' -> Kamu, 'admin' -> Penjual).
+            const isFirstOffer = index === 0;
+            const effectiveSender = isFirstOffer ? 'admin' : o.sender;
+            const isBuyer = effectiveSender === 'buyer';
+
+            return (
+              <div
+                key={o.id}
+                className="card"
+                style={{
+                  alignSelf: isBuyer ? 'flex-end' : 'flex-start',
+                  backgroundColor: isBuyer ? 'var(--terracotta)' : '#D8C3A5',
+                  color: isBuyer ? '#FFF' : '#1A1714',
+                  maxWidth: '75%',
+                  padding: '10px 14px',
+                  borderRadius: 12,
+                  fontSize: 14,
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                  border: isBuyer ? 'none' : '2px solid #8C755B'
+                }}
+              >
+                <div style={{ fontSize: 10, opacity: 0.85, marginBottom: 2, fontWeight: '700' }}>
+                  {isBuyer ? 'Kamu' : 'Penjual'}
+                </div>
+                <div style={{ fontWeight: '800' }}>
+                  Rp{Number(o.amount).toLocaleString('id-ID')}
+                </div>
               </div>
-              <div style={{ fontWeight: '800' }}>
-                Rp{Number(o.amount).toLocaleString('id-ID')}
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
