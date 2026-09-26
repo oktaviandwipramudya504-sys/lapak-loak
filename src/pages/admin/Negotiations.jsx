@@ -31,7 +31,7 @@ export default function AdminNegotiations() {
       const { error: orderError } = await supabase.from('orders').insert({
         order_code: orderCode,
         item_id: neg.item_id,
-        buyer_name: 'Pembeli Nego',
+        buyer_name: neg.buyer_name ?? 'Pembeli Nego',
         buyer_whatsapp: buyerWhatsapp,
         address: 'Alamat dari ruang tawar',
         shipping_cost: 0,
@@ -124,7 +124,8 @@ export default function AdminNegotiations() {
             return (
               <div key={n.id} className="card" style={{ padding: 16 }}>
                 <p style={{ margin: 0, fontWeight: 800, fontSize: 15, color: '#1A1714' }}>{n.items?.name}</p>
-                <p style={{ margin: '4px 0 8px', fontSize: 12, color: '#1A1714', opacity: 0.8 }}>WhatsApp Pembeli: <strong>{n.buyer_whatsapp}</strong></p>
+                <p style={{ margin: '4px 0 2px', fontSize: 12, color: '#1A1714', opacity: 0.8 }}>Nama: <strong>{n.buyer_name || '-'}</strong></p>
+                <p style={{ margin: '0 0 8px', fontSize: 12, color: '#1A1714', opacity: 0.8 }}>WhatsApp Pembeli: <strong>{n.buyer_whatsapp}</strong></p>
                 <p style={{ margin: '0 0 12px', fontSize: 14, fontWeight: '700', color: 'var(--terracotta)' }}>
                   Tawaran terakhir: Rp{Number(tawaranTerakhir?.amount ?? 0).toLocaleString('id-ID')} ({tawaranTerakhir?.sender === 'buyer' ? 'Pembeli' : 'Admin'})
                 </p>

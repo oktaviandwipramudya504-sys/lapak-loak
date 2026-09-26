@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient.js';
 import Loader from '../../components/Loader';
 
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB, sesuai limit plan gratis Supabase
+
 export default function AdminItems() {
   const [items, setItems] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -49,6 +51,16 @@ export default function AdminItems() {
       setErrMsg('Nama dan harga awal wajib diisi.');
       return;
     }
+
+    // Cek ukuran file SEBELUM mulai upload, biar admin langsung tahu file mana yang kegedean
+    const semuaFile = [...photoFiles, ...videoFiles];
+    const fileKebesaran = semuaFile.find((f) => f.size > MAX_FILE_SIZE);
+    if (fileKebesaran) {
+      const ukuranMB = (fileKebesaran.size / (1024 * 1024)).toFixed(1);
+      setErrMsg(`File "${fileKebesaran.name}" berukuran ${ukuranMB}MB, melebihi batas maksimal 50MB. Silakan kompres dulu atau pilih file yang lebih kecil.`);
+      return;
+    }
+
     setUploading(true);
     setErrMsg('');
     try {

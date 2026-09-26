@@ -10,13 +10,19 @@ export default function ItemDetail() {
   const [item, setItem] = useState(null);
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [buyerName, setBuyerName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [showTawarForm, setShowTawarForm] = useState(false);
   const [activePhoto, setActivePhoto] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [isZoomOpen, setIsZoomOpen] = useState(false);
 
   useEffect(() => {
-    // 1. Cek apakah nomor WhatsApp sudah tersimpan di browser sebelumnya
+    // 1. Cek apakah nama & nomor WhatsApp sudah tersimpan di browser sebelumnya
+    const savedName = localStorage.getItem('buyer_name');
+    if (savedName) {
+      setBuyerName(savedName);
+    }
     const savedWa = localStorage.getItem('buyer_whatsapp');
     if (savedWa) {
       setWhatsapp(savedWa);
@@ -56,13 +62,20 @@ export default function ItemDetail() {
   }, [itemId]);
 
   async function mulaiTawar() {
+    const cleanName = buyerName.trim();
     const cleanWa = whatsapp.trim();
+
+    if (!cleanName) {
+      alert('Masukkan nama kamu dulu ya, bos!');
+      return;
+    }
     if (!cleanWa) {
       alert('Masukkan nomor WhatsApp dulu ya, bos!');
       return;
     }
 
-    // Simpan nomor WhatsApp ke localStorage agar pembeli tidak perlu input ulang di produk lain
+    // Simpan nama & nomor WhatsApp ke localStorage agar pembeli tidak perlu input ulang di produk lain
+    localStorage.setItem('buyer_name', cleanName);
     localStorage.setItem('buyer_whatsapp', cleanWa);
 
     setSubmitting(true);
@@ -89,6 +102,7 @@ export default function ItemDetail() {
         .from('negotiations')
         .insert({ 
           item_id: itemId, 
+          buyer_name: cleanName,
           buyer_whatsapp: cleanWa, 
           status: 'aktif' 
         })
@@ -129,10 +143,14 @@ export default function ItemDetail() {
   );
 
   const photos = item.photos ?? [];
+  const videos = item.videos ?? [];
 
   return (
     <div className="page" style={{ maxWidth: 600, margin: '20px auto', padding: 16 }}>
-      <div style={{ aspectRatio: '4/3', background: '#EEE7DA', borderRadius: 14, overflow: 'hidden', position: 'relative' }}>
+      <div
+        onClick={() => photos[activePhoto] && setIsZoomOpen(true)}
+        style={{ aspectRatio: '4/3', background: '#EEE7DA', borderRadius: 14, overflow: 'hidden', position: 'relative', cursor: photos[activePhoto] ? 'zoom-in' : 'default' }}
+      >
         {photos[activePhoto] && (
           <img
             src={photos[activePhoto]}
@@ -182,12 +200,63 @@ export default function ItemDetail() {
         </div>
       )}
 
-      {item.video_url && (
-        <video
-          src={item.video_url}
-          controls
-          style={{ width: '100%', borderRadius: 12, marginTop: 10 }}
-        />
+      {isZoomOpen && photos[activePhoto] && (
+        <div
+          onClick={() => setIsZoomOpen(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.9)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'zoom-out',
+            padding: 20
+          }}
+        >
+          <button
+            onClick={() => setIsZoomOpen(false)}
+            style={{
+              position: 'absolute',
+              top: 16,
+              right: 16,
+              background: 'rgba(255,255,255,0.15)',
+              border: 'none',
+              color: '#FFF',
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              fontSize: 20,
+              cursor: 'pointer',
+              lineHeight: 1
+            }}
+          >
+            ✕
+          </button>
+          <img
+            src={photos[activePhoto]}
+            alt={item.name}
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: 8 }}
+          />
+        </div>
+      )}
+
+      {videos.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 10 }}>
+          {videos.map((url) => (
+            <video
+              key={url}
+              src={url}
+              controls
+              style={{ width: '100%', borderRadius: 12 }}
+            />
+          ))}
+        </div>
       )}
 
       <h1 style={{ fontSize: 18, margin: '14px 0 4px', color: '#fffefc', fontWeight: '900' }}>{item.name}</h1>
@@ -208,8 +277,15 @@ export default function ItemDetail() {
       {showTawarForm && (
         <div className="card" style={{ marginTop: 14, padding: 16 }}>
           <p style={{ fontSize: 13, marginTop: 0, fontWeight: '700', color: '#1A1714' }}>
-            {whatsapp ? 'Nomor WhatsApp kamu sudah tersimpan:' : 'Masukkan nomor WhatsApp buat mulai nego:'}
+            Masukkan nama & nomor WhatsApp buat mulai nego:
           </p>
+          <input
+            type="text"
+            placeholder="Nama kamu"
+            value={buyerName}
+            onChange={(e) => setBuyerName(e.target.value)}
+            style={{ width: '100%', padding: 10, marginBottom: 10, borderRadius: 8, border: '1px solid #8C755B', background: '#FFF5E6', color: '#1A1714' }}
+          />
           <input
             type="tel"
             placeholder="Contoh: 08123456789"
