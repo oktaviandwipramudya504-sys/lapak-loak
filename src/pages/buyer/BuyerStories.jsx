@@ -60,8 +60,8 @@ export default function BuyerStories() {
       fetchStories();
       alert('Ulasan berhasil dikirim!');
     } catch (error) {
-      console.error('Error submitting story:', error.message);
-      alert('Gagal mengirim ulasan, silahkan coba lagi.');
+      console.error('Error submitting story:', error);
+      alert('Gagal: ' + (error.message || JSON.stringify(error)));
     } finally {
       setSubmitting(false);
     }
