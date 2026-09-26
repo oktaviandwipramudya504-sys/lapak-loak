@@ -7,9 +7,9 @@ export default function BuyerStories() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [newStory, setNewStory] = useState({
-    name: '',
+    order_code: '',
     rating: 5,
-    story: ''
+    comment: ''
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -36,38 +36,26 @@ export default function BuyerStories() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!newStory.name || !newStory.story) {
-      alert('Nama dan ulasan wajib diisi ya!');
+    if (!newStory.order_code || !newStory.comment) {
+      alert('Kode Pesanan dan Ulasan wajib diisi ya!');
       return;
     }
 
     try {
       setSubmitting(true);
-      
-      // Kirim hanya kolom yang pasti ada di database (name, rating, story)
-      const payload = {
-        name: newStory.name,
-        rating: newStory.rating,
-        story: newStory.story
-      };
-
       const { error } = await supabase
         .from('buyer_stories')
-        .insert([payload]);
+        .insert([newStory]);
 
       if (error) throw error;
 
-      setNewStory({
-        name: '',
-        rating: 5,
-        story: ''
-      });
+      setNewStory({ order_code: '', rating: 5, comment: '' });
       setShowForm(false);
       fetchStories();
       alert('Ulasan berhasil dikirim!');
     } catch (error) {
       console.error('Error submitting story:', error);
-      alert('Gagal: ' + (error.message || JSON.stringify(error)));
+      alert('Gagal: ' + error.message);
     } finally {
       setSubmitting(false);
     }
@@ -75,10 +63,8 @@ export default function BuyerStories() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      {/* SATU CARD UTAMA NEO BRUTALISM */}
       <div className="bg-white text-black rounded-xl p-6 md:p-8 border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
         
-        {/* Header di dalam card */}
         <div className="flex justify-between items-center flex-wrap gap-4 pb-6 border-b-4 border-black">
           <div>
             <h1 className="text-2xl font-black mb-1 tracking-tight">CERITA PEMBELI (BUYER STORIES)</h1>
@@ -93,7 +79,6 @@ export default function BuyerStories() {
           </button>
         </div>
 
-        {/* Form Input Ulasan */}
         {showForm && (
           <div className="my-6 p-6 bg-yellow-50 rounded-xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <h2 className="text-lg font-black mb-4 flex items-center gap-2">
@@ -102,12 +87,12 @@ export default function BuyerStories() {
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-bold text-black mb-1">Nama</label>
+                <label className="block text-sm font-bold text-black mb-1">Kode Pesanan (Order Code)</label>
                 <input
                   type="text"
-                  value={newStory.name}
-                  onChange={(e) => setNewStory({ ...newStory, name: e.target.value })}
-                  placeholder="Nama kamu"
+                  value={newStory.order_code}
+                  onChange={(e) => setNewStory({ ...newStory, order_code: e.target.value })}
+                  placeholder="Contoh: TRILOGY-001"
                   className="w-full px-3 py-2 bg-white border-2 border-black rounded-lg focus:outline-none text-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                   required
                 />
@@ -127,11 +112,11 @@ export default function BuyerStories() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-bold text-black mb-1">Ulasan / Cerita</label>
+                <label className="block text-sm font-bold text-black mb-1">Ulasan / Komentar</label>
                 <textarea
                   rows={4}
-                  value={newStory.story}
-                  onChange={(e) => setNewStory({ ...newStory, story: e.target.value })}
+                  value={newStory.comment}
+                  onChange={(e) => setNewStory({ ...newStory, comment: e.target.value })}
                   placeholder="Ceritakan pengalamanmu..."
                   className="w-full px-3 py-2 bg-white border-2 border-black rounded-lg focus:outline-none text-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                   required
@@ -149,7 +134,6 @@ export default function BuyerStories() {
           </div>
         )}
 
-        {/* Bagian Daftar Ulasan */}
         <div className="mt-6">
           <h2 className="text-xl font-black text-black mb-4 tracking-tight">ULASAN PEMBELI</h2>
           
@@ -166,9 +150,7 @@ export default function BuyerStories() {
               {stories.map((story) => (
                 <div key={story.id} className="bg-white rounded-lg p-5 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                   <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h3 className="font-black text-base text-black">{story.name || story.buyer_name}</h3>
-                    </div>
+                    <h3 className="font-black text-base text-black">Order: {story.order_code}</h3>
                     <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded border-2 border-black">
                       {[...Array(5)].map((_, i) => (
                         <Star
@@ -181,7 +163,7 @@ export default function BuyerStories() {
                     </div>
                   </div>
                   <p className="text-black text-sm mb-3 whitespace-pre-line leading-relaxed font-medium">
-                    {story.story || story.comment}
+                    {story.comment}
                   </p>
                   <div className="text-xs text-gray-700 font-bold pt-2 border-t-2 border-black">
                     {story.created_at ? new Date(story.created_at).toLocaleDateString('id-ID', {
