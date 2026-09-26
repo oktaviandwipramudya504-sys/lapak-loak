@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabaseClient'
+import { MessageSquare, Send } from 'lucide-react'
 
 export default function BuyerStoryForm() {
   const { orderCode } = useParams()
@@ -46,36 +47,52 @@ export default function BuyerStoryForm() {
 
   if (sent) {
     return (
-      <div className="app-shell" data-area="buyer" style={{ padding: 16 }}>
-        <p>Makasih ceritanya! 🎉</p>
+      <div className="max-w-xl mx-auto px-4 py-12">
+        <div className="bg-[#fcf7ee] rounded-2xl shadow-xl p-8 text-center border-2 border-[#b58b53]">
+          <p className="text-xl font-bold text-gray-900">Makasih ceritanya! 🎉</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="app-shell" data-area="buyer" style={{ padding: 16 }}>
-      <h1 style={{ fontSize: 16 }}>Bagaimana pengalamanmu?</h1>
-      <div style={{ fontSize: 24, margin: '10px 0' }}>
-        {[1, 2, 3, 4, 5].map((n) => (
-          <span
-            key={n}
-            onClick={() => setRating(n)}
-            style={{ cursor: 'pointer', color: n <= rating ? 'var(--amber)' : 'var(--border)' }}
-          >
-            ★
-          </span>
-        ))}
+    <div className="max-w-xl mx-auto px-4 py-8">
+      <div className="bg-[#fcf7ee] rounded-2xl shadow-xl p-6 border-2 border-[#b58b53]">
+        <h1 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <MessageSquare className="w-5 h-5 text-[#8b4513]" />
+          Bagaimana pengalamanmu?
+        </h1>
+        
+        <div className="text-2xl mb-4 flex gap-1">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <span
+              key={n}
+              onClick={() => setRating(n)}
+              style={{ cursor: 'pointer', color: n <= rating ? '#eab308' : '#d1d5db' }}
+              className="text-2xl transition hover:scale-110"
+            >
+              ★
+            </span>
+          ))}
+        </div>
+
+        <textarea
+          placeholder="Ceritakan pengalamanmu..."
+          rows={4}
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          className="w-full px-3 py-2 bg-white border border-[#b58b53] rounded-md focus:ring-2 focus:ring-[#8b4513] focus:outline-none text-gray-800 mb-4"
+        />
+
+        <button 
+          onClick={submit} 
+          disabled={loading}
+          className="w-full bg-[#a04010] hover:bg-[#8b350d] text-white font-semibold py-2.5 rounded-lg shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50 border border-[#7a2e0a]"
+        >
+          <Send className="w-4 h-4" />
+          {loading ? 'Mengirim...' : 'Kirim cerita'}
+        </button>
       </div>
-      <textarea
-        placeholder="Ceritakan pengalamanmu..."
-        rows={4}
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        style={{ marginBottom: 10, width: '100%', padding: 8 }}
-      />
-      <button className="btn-primary" onClick={submit} disabled={loading}>
-        {loading ? 'Mengirim...' : 'Kirim cerita'}
-      </button>
     </div>
   )
 }
