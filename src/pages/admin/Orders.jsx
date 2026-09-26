@@ -53,12 +53,15 @@ export default function AdminOrders() {
         const itemName = targetOrder.items?.name || 'Barang Loak';
         let statusText = status.replace('-', ' ');
         
+        // Menambahkan link ruang tawar / detail item ke pesan WhatsApp
+        const itemUrl = `${window.location.origin}/item/${targetOrder.item_id}`;
+
         // Buat pesan WhatsApp otomatis sesuai status
         let pesanWa = `Halo kak ${targetOrder.buyer_name || ''}, status pesanan Anda (${itemName}) dengan kode ${orderCode} kini telah diperbarui menjadi: *${statusText.toUpperCase()}*.`;
         if (currentResi && (status === 'dikirim' || status === 'selesai')) {
           pesanWa += ` Nomor resi pengiriman Anda: *${currentResi}*.`;
         }
-        pesanWa += ` Terima kasih sudah berbelanja di Lapak Ara!`;
+        pesanWa += `\n\nSilakan cek detail pesanan/produk di web ya:\n${itemUrl}\n\nTerima kasih sudah berbelanja di Lapak Ara!`;
 
         const urlWa = `https://wa.me/${cleanWa}?text=${encodeURIComponent(pesanWa)}`;
         window.open(urlWa, '_blank');
@@ -103,9 +106,12 @@ export default function AdminOrders() {
 
             // Format nomor WA untuk link langsung
             const cleanWa = o.buyer_whatsapp ? o.buyer_whatsapp.replace(/\D/g, '') : '';
+            const itemUrlForChat = `${window.location.origin}/item/${o.item_id}`;
+            const defaultChatText = encodeURIComponent(`Halo kak, terkait pesanan dengan kode ${o.order_code} (${o.items?.name || 'Barang Loak'}). Silakan cek detailnya di web ya: ${itemUrlForChat}`);
+            
             const waUrl = cleanWa.startsWith('0') 
-              ? `https://wa.me/62${cleanWa.slice(1)}?text=Halo%20kak,%20terkait%20pesanan%20dengan%20kode%20${o.order_code}`
-              : `https://wa.me/${cleanWa}?text=Halo%20kak,%20terkait%20pesanan%20dengan%20kode%20${o.order_code}`;
+              ? `https://wa.me/62${cleanWa.slice(1)}?text=${defaultChatText}`
+              : `https://wa.me/${cleanWa}?text=${defaultChatText}`;
 
             return (
               <div key={o.order_code} className="card" style={{ padding: 16, background: '#FFF5E6', border: '1px solid #8C755B', borderRadius: 8 }}>

@@ -49,6 +49,19 @@ export default function AdminNegotiations() {
       // 4. Amankan status barang
       await supabase.from('items').update({ status: 'terjual' }).eq('id', neg.item_id);
 
+      // 5. Kirim pesan WhatsApp otomatis ke pembeli bahwa tawaran diterima beserta link ruang tawar
+      if (buyerWhatsapp && buyerWhatsapp !== '-') {
+        let nomorWa = buyerWhatsapp.replace(/\D/g, '');
+        if (nomorWa.startsWith('0')) {
+          nomorWa = '62' + nomorWa.slice(1);
+        }
+
+        const itemUrl = `${window.location.origin}/item/${neg.item_id}`;
+        const pesanWa = `Halo Kak ${neg.buyer_name || 'Pembeli'}, tawaran untuk produk *${itemName}* sebesar Rp${dealAmount.toLocaleString('id-ID')} telah DITERIMA oleh Admin!\n\nSilakan cek ruang tawar di web ya untuk melanjutkan:\n${itemUrl}`;
+        const urlWa = `https://wa.me/${nomorWa}?text=${encodeURIComponent(pesanWa)}`;
+        window.open(urlWa, '_blank');
+      }
+
       alert(`Tawaran berhasil diterima (Deal)! Pesanan dibuat dengan kode ${orderCode}.`);
       fetchNegotiations();
     } catch (err) {
@@ -74,7 +87,7 @@ export default function AdminNegotiations() {
 
       if (error) throw error;
 
-      // Kirim pesan WhatsApp otomatis ke pembeli
+      // Kirim pesan WhatsApp otomatis ke pembeli beserta link ruang tawar
       const targetNeg = negotiations.find(n => n.id === negotiationId);
       if (targetNeg && targetNeg.buyer_whatsapp) {
         let nomorWa = targetNeg.buyer_whatsapp.replace(/\D/g, '');
@@ -82,7 +95,8 @@ export default function AdminNegotiations() {
           nomorWa = '62' + nomorWa.slice(1);
         }
 
-        const pesanWa = `Halo kak, admin Lapak Ara sudah mengirimkan harga tawar balik (counter) sebesar Rp${Number(amount).toLocaleString('id-ID')}. Silakan cek ruang tawar di web ya!`;
+        const itemUrl = `${window.location.origin}/item/${targetNeg.item_id}`;
+        const pesanWa = `Halo kak, admin Lapak Ara sudah mengirimkan harga tawar balik (counter) sebesar Rp${Number(amount).toLocaleString('id-ID')} untuk produk *${targetNeg.items?.name || 'ini'}*.\n\nSilakan cek ruang tawar di web ya:\n${itemUrl}`;
         const urlWa = `https://wa.me/${nomorWa}?text=${encodeURIComponent(pesanWa)}`;
         window.open(urlWa, '_blank');
       }

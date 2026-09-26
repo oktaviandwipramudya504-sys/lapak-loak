@@ -54,8 +54,9 @@ export default function Checkout() {
       return;
     }
 
-    // Integrasi instan ke WhatsApp Admin saat checkout dengan info pilihan jasa kirim menggunakan APP_CONFIG
-    const pesan = `Halo Admin Lapak Loak, saya ingin konfirmasi pesanan baru (Kode: *${orderCode}*). Nama: ${form.nama}, No WA: ${form.whatsapp}, Jasa Kirim Pilihan: ${form.jasaKirim}. Mohon cek ongkir dan proses pesanan saya ya kak!`;
+    // Integrasi instan ke WhatsApp Admin saat checkout dengan menyertakan link item/pesanan
+    const itemUrl = `${window.location.origin}/item/${itemId}`;
+    const pesan = `Halo Admin Lapak Loak, saya ingin konfirmasi pesanan baru (Kode: *${orderCode}*).\nNama: ${form.nama}, No WA: ${form.whatsapp}, Jasa Kirim Pilihan: ${form.jasaKirim}.\n\nSilakan cek detail produknya di sini:\n${itemUrl}\n\nMohon cek ongkir dan proses pesanan saya ya kak!`;
     const urlWa = getWhatsAppLink(APP_CONFIG.ADMIN_WHATSAPP, pesan);
     window.open(urlWa, '_blank');
 
