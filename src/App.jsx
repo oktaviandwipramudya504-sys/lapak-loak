@@ -8,6 +8,7 @@ import Checkout from './pages/buyer/Checkout.jsx';
 import Payment from './pages/buyer/Payment.jsx';
 import OrderTracking from './pages/buyer/OrderTracking.jsx';
 import BuyerStoryForm from './pages/buyer/BuyerStoryForm.jsx';
+import BuyerStories from './pages/buyer/BuyerStories.jsx'; // <-- Impor halaman daftar cerita mereka
 import MyActivity from './pages/buyer/MyActivity.jsx'; // <-- Impor halaman aktivitas saya
 
 // Halaman admin
@@ -33,6 +34,7 @@ export default function App() {
       <Route path="/bayar/:orderCode" element={<Payment />} />
       <Route path="/pesanan/:orderCode" element={<OrderTracking />} />
       <Route path="/pesanan/:orderCode/cerita" element={<BuyerStoryForm />} />
+      <Route path="/ulasan" element={<BuyerStories />} /> {/* <-- Rute baru untuk daftar cerita mereka */}
       <Route path="/aktivitas-saya" element={<MyActivity />} /> {/* <-- Rute baru untuk aktivitas pembeli */}
 
       {/* Sisi admin — perlu login, sama-sama diakses dari HP/laptop */}

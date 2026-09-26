@@ -21,7 +21,6 @@ export default function Home() {
       return url;
     }
     // Jika berupa path di Supabase Storage, ambil public URL-nya
-    // Asumsi bucket yang digunakan bernama 'affiliates' atau 'items'. Sesuaikan jika berbeda.
     const { data } = supabase.storage
       .from('affiliates') 
       .getPublicUrl(url);
@@ -108,7 +107,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Filter Kategori Interaktif */}
+      {/* Filter Kategori Interaktif & Tombol Cerita Mereka */}
       <div style={{ display: 'flex', gap: 8, overflowX: 'auto', margin: '12px 0', paddingBottom: 4 }}>
         {FILTERS.map((f) => {
           const isActive = activeFilter === f;
@@ -128,6 +127,24 @@ export default function Home() {
             </button>
           );
         })}
+
+        {/* Tombol Navigasi ke Halaman Cerita Mereka */}
+        <button
+          onClick={() => navigate('/ulasan')}
+          className="btn-secondary"
+          style={{
+            whiteSpace: 'nowrap',
+            fontSize: 13,
+            padding: '6px 14px',
+            borderRadius: '20px',
+            background: '#fdfbf7',
+            border: '2px solid #1A1714',
+            fontWeight: '700',
+            color: '#1A1714'
+          }}
+        >
+          ⭐ Cerita Mereka
+        </button>
       </div>
 
       {/* Fitur Iklan / Rekomendasi Mandiri */}

@@ -7,10 +7,41 @@ export default function BuyerStoryForm() {
   const [rating, setRating] = useState(5)
   const [comment, setComment] = useState('')
   const [sent, setSent] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   async function submit() {
-    await supabase.from('buyer_stories').insert({ order_code: orderCode, rating, comment })
-    setSent(true)
+    if (!comment.trim()) {
+      alert('Tuliskan cerita pengalamanmu dulu ya kak!')
+      return
+    }
+
+    setLoading(true)
+    try {
+      // Mengambil nama pembeli dari tabel orders berdasarkan order_code
+      const { data: orderData } = await supabase
+        .from('orders')
+        .select('buyer_name')
+        .eq('order_code', orderCode)
+        .single()
+
+      const buyerName = orderData?.buyer_name || 'Pembeli Setia'
+
+      // Menyimpan data ke tabel buyer_stories sesuai alur aslimu + buyer_name
+      const { error } = await supabase.from('buyer_stories').insert({ 
+        order_code: orderCode, 
+        buyer_name: buyerName, 
+        rating, 
+        comment 
+      })
+
+      if (error) throw error
+      setSent(true)
+    } catch (err) {
+      console.error('Gagal mengirim ulasan:', err)
+      alert('Gagal mengirim cerita, silahkan coba lagi ya.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (sent) {
@@ -40,9 +71,11 @@ export default function BuyerStoryForm() {
         rows={4}
         value={comment}
         onChange={(e) => setComment(e.target.value)}
-        style={{ marginBottom: 10 }}
+        style={{ marginBottom: 10, width: '100%', padding: 8 }}
       />
-      <button className="btn-primary" onClick={submit}>Kirim cerita</button>
+      <button className="btn-primary" onClick={submit} disabled={loading}>
+        {loading ? 'Mengirim...' : 'Kirim cerita'}
+      </button>
     </div>
   )
 }
