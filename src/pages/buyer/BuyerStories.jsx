@@ -72,7 +72,7 @@ export default function BuyerStories() {
       {/* Header Card */}
       <div className="bg-[#fcf7ee] rounded-2xl shadow-xl p-6 mb-6 border-2 border-[#b58b53]">
         <h1 className="text-2xl font-bold text-gray-900 mb-1">Cerita Pembeli (Buyer Stories)</h1>
-        <p className="text-gray-700 text-sm mb-4">Bagikan pengalaman seru dan barang loak impian yang kamu dapatkan di sini!</p>
+        <p className="text-gray-700 text-sm">Bagikan pengalaman seru dan barang loak impian yang kamu dapatkan di sini!</p>
       </div>
 
       {/* Form Bagikan Cerita Card */}
