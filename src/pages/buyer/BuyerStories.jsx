@@ -8,7 +8,6 @@ export default function BuyerStories() {
   const [showForm, setShowForm] = useState(false);
   const [newStory, setNewStory] = useState({
     name: '',
-    item_bought: '',
     rating: 5,
     story: ''
   });
@@ -45,10 +44,9 @@ export default function BuyerStories() {
     try {
       setSubmitting(true);
       
-      // Kirim data menggunakan kolom 'name' dan 'story' sesuai error schema cache
+      // Kirim hanya kolom yang pasti ada di database (name, rating, story)
       const payload = {
         name: newStory.name,
-        item_bought: newStory.item_bought,
         rating: newStory.rating,
         story: newStory.story
       };
@@ -61,7 +59,6 @@ export default function BuyerStories() {
 
       setNewStory({
         name: '',
-        item_bought: '',
         rating: 5,
         story: ''
       });
@@ -113,16 +110,6 @@ export default function BuyerStories() {
                   placeholder="Nama kamu"
                   className="w-full px-3 py-2 bg-white border-2 border-black rounded-lg focus:outline-none text-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                   required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-black mb-1">Barang yang Dibeli (Opsional)</label>
-                <input
-                  type="text"
-                  value={newStory.item_bought}
-                  onChange={(e) => setNewStory({ ...newStory, item_bought: e.target.value })}
-                  placeholder="Contoh: Barang loak"
-                  className="w-full px-3 py-2 bg-white border-2 border-black rounded-lg focus:outline-none text-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                 />
               </div>
               <div>
@@ -181,11 +168,6 @@ export default function BuyerStories() {
                   <div className="flex justify-between items-start mb-3">
                     <div>
                       <h3 className="font-black text-base text-black">{story.name || story.buyer_name}</h3>
-                      {story.item_bought && (
-                        <span className="inline-block mt-1 bg-yellow-200 text-black text-xs font-bold px-2.5 py-0.5 rounded border-2 border-black">
-                          Membeli: {story.item_bought}
-                        </span>
-                      )}
                     </div>
                     <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded border-2 border-black">
                       {[...Array(5)].map((_, i) => (
