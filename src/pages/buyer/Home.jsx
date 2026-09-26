@@ -107,7 +107,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Filter Kategori Interaktif & Tombol Cerita Mereka */}
+      {/* Filter Kategori Interaktif */}
       <div style={{ display: 'flex', gap: 8, overflowX: 'auto', margin: '12px 0', paddingBottom: 4 }}>
         {FILTERS.map((f) => {
           const isActive = activeFilter === f;
@@ -127,24 +127,6 @@ export default function Home() {
             </button>
           );
         })}
-
-        {/* Tombol Navigasi ke Halaman Cerita Mereka */}
-        <button
-          onClick={() => navigate('/ulasan')}
-          className="btn-secondary"
-          style={{
-            whiteSpace: 'nowrap',
-            fontSize: 13,
-            padding: '6px 14px',
-            borderRadius: '20px',
-            background: '#fdfbf7',
-            border: '2px solid #1A1714',
-            fontWeight: '700',
-            color: '#1A1714'
-          }}
-        >
-          ⭐ Cerita Mereka
-        </button>
       </div>
 
       {/* Fitur Iklan / Rekomendasi Mandiri */}
