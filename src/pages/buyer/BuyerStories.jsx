@@ -7,10 +7,10 @@ export default function BuyerStories() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [newStory, setNewStory] = useState({
-    name: '',
+    buyer_name: '',
     item_bought: '',
     rating: 5,
-    story: ''
+    comment: ''
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -37,7 +37,7 @@ export default function BuyerStories() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!newStory.name || !newStory.story) {
+    if (!newStory.buyer_name || !newStory.comment) {
       alert('Nama dan ulasan wajib diisi ya!');
       return;
     }
@@ -51,13 +51,14 @@ export default function BuyerStories() {
       if (error) throw error;
 
       setNewStory({
-        name: '',
+        buyer_name: '',
         item_bought: '',
         rating: 5,
-        story: ''
+        comment: ''
       });
       setShowForm(false);
       fetchStories();
+      alert('Ulasan berhasil dikirim!');
     } catch (error) {
       console.error('Error submitting story:', error.message);
       alert('Gagal mengirim ulasan, silahkan coba lagi.');
@@ -98,8 +99,8 @@ export default function BuyerStories() {
                 <label className="block text-sm font-bold text-black mb-1">Nama</label>
                 <input
                   type="text"
-                  value={newStory.name}
-                  onChange={(e) => setNewStory({ ...newStory, name: e.target.value })}
+                  value={newStory.buyer_name}
+                  onChange={(e) => setNewStory({ ...newStory, buyer_name: e.target.value })}
                   placeholder="Nama kamu"
                   className="w-full px-3 py-2 bg-white border-2 border-black rounded-lg focus:outline-none text-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                   required
@@ -133,8 +134,8 @@ export default function BuyerStories() {
                 <label className="block text-sm font-bold text-black mb-1">Ulasan / Cerita</label>
                 <textarea
                   rows={4}
-                  value={newStory.story}
-                  onChange={(e) => setNewStory({ ...newStory, story: e.target.value })}
+                  value={newStory.comment}
+                  onChange={(e) => setNewStory({ ...newStory, comment: e.target.value })}
                   placeholder="Ceritakan pengalamanmu..."
                   className="w-full px-3 py-2 bg-white border-2 border-black rounded-lg focus:outline-none text-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                   required
@@ -170,7 +171,7 @@ export default function BuyerStories() {
                 <div key={story.id} className="bg-white rounded-lg p-5 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                   <div className="flex justify-between items-start mb-3">
                     <div>
-                      <h3 className="font-black text-base text-black">{story.name || story.buyer_name}</h3>
+                      <h3 className="font-black text-base text-black">{story.buyer_name || story.name}</h3>
                       {story.item_bought && (
                         <span className="inline-block mt-1 bg-yellow-200 text-black text-xs font-bold px-2.5 py-0.5 rounded border-2 border-black">
                           Membeli: {story.item_bought}
@@ -189,7 +190,7 @@ export default function BuyerStories() {
                     </div>
                   </div>
                   <p className="text-black text-sm mb-3 whitespace-pre-line leading-relaxed font-medium">
-                    {story.story || story.comment}
+                    {story.comment || story.story}
                   </p>
                   <div className="text-xs text-gray-700 font-bold pt-2 border-t-2 border-black">
                     {story.created_at ? new Date(story.created_at).toLocaleDateString('id-ID', {
