@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../supabaseClient';
-import { Star, MessageSquare, Send, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { supabase } from '../../lib/supabaseClient';
+import { Star, MessageSquare, ThumbsUp, Send, Image as ImageIcon } from 'lucide-react';
 
 export default function BuyerStories() {
-  const navigate = useNavigate();
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [newStory, setNewStory] = useState({
+    name: '',
+    item_bought: '',
+    rating: 5,
+    story: '',
+    image_url: ''
+  });
   const [submitting, setSubmitting] = useState(false);
-
-  // Form state
-  const [buyerName, setBuyerName] = useState('');
-  const [rating, setRating] = useState(5);
-  const [hoverRating, setHoverRating] = useState(0);
-  const [comment, setComment] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
 
   useEffect(() => {
     fetchStories();
@@ -22,6 +20,7 @@ export default function BuyerStories() {
 
   const fetchStories = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('buyer_stories')
         .select('*')
@@ -29,8 +28,8 @@ export default function BuyerStories() {
 
       if (error) throw error;
       setStories(data || []);
-    } catch (err) {
-      console.error('Gagal memuat cerita:', err.message);
+    } catch (error) {
+      console.error('Error fetching stories:', error.message);
     } finally {
       setLoading(false);
     }
@@ -38,219 +37,175 @@ export default function BuyerStories() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitting(true);
-    setSuccessMsg('');
+    if (!newStory.name || !newStory.story) {
+      alert('Nama dan cerita wajib diisi!');
+      return;
+    }
 
     try {
-      const { error } = await supabase.from('buyer_stories').insert([
-        {
-          order_code: 'PUBLIK-' + Date.now().toString().slice(-6),
-          buyer_name: buyerName.trim() || 'Pengunjung Setia',
-          rating: rating,
-          comment: comment.trim() || 'Memberikan rating bintang ' + rating + ' tanpa ulasan teks.'
-        }
-      ]);
+      setSubmitting(true);
+      const { error } = await supabase
+        .from('buyer_stories')
+        .insert([newStory]);
 
       if (error) throw error;
 
-      setSuccessMsg('Terima kasih! Cerita atau rating kamu berhasil dibagikan.');
-      setBuyerName('');
-      setComment('');
-      setRating(5);
+      setNewStory({
+        name: '',
+        item_bought: '',
+        rating: 5,
+        story: '',
+        image_url: ''
+      });
       fetchStories();
-    } catch (err) {
-      alert('Gagal mengirim ulasan: ' + err.message);
+      alert('Cerita berhasil dibagikan!');
+    } catch (error) {
+      console.error('Error submitting story:', error.message);
+      alert('Gagal membagikan cerita. Silakan coba lagi.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Hitung rata-rata rating dan total ulasan
-  const totalReviews = stories.length;
-  const averageRating = totalReviews > 0 
-    ? (stories.reduce((acc, curr) => acc + (curr.rating || 5), 0) / totalReviews).toFixed(1) 
-    : '5.0';
-
   return (
-    <div className="min-h-screen bg-stone-900 text-stone-100 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        
-        {/* Tombol Kembali & Header */}
-        <div className="mb-6 flex items-center justify-between">
-          <button 
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-stone-400 hover:text-stone-100 transition-colors bg-stone-800/60 px-4 py-2 rounded-xl border border-stone-700 text-sm"
-          >
-            <ArrowLeft size={18} /> Kembali
-          </button>
-        </div>
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="text-center mb-12">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Cerita Pembeli (Buyer Stories)</h1>
+        <p className="text-gray-600">Bagikan pengalaman seru dan barang loak impian yang kamu dapatkan di sini!</p>
+      </div>
 
-        {/* Banner Header */}
-        <div className="bg-gradient-to-r from-stone-800 to-stone-800/60 border border-stone-700/80 rounded-2xl p-6 sm:p-8 mb-8 shadow-xl backdrop-blur-md">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+      {/* Form Bagikan Cerita */}
+      <div className="bg-white rounded-xl shadow-md p-6 mb-12 border border-gray-100">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <MessageSquare className="w-5 h-5 text-indigo-600" />
+          Tulis Cerita Belanjamu
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-stone-100 mb-2">
-                Cerita & Ulasan Pengunjung
-              </h1>
-              <p className="text-stone-400 text-sm sm:text-base max-w-xl">
-                Bagikan pengalaman, ulasan, atau rating kamu setelah berselancar dan berbelanja di Lapak Ara. Pendapatmu sangat berharga bagi kami!
-              </p>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nama Kamu</label>
+              <input
+                type="text"
+                value={newStory.name}
+                onChange={(e) => setNewStory({ ...newStory, name: e.target.value })}
+                placeholder="Contoh: Budi Santoso"
+                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                required
+              />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Barang yang Dibeli</label>
+              <input
+                type="text"
+                value={newStory.item_bought}
+                onChange={(e) => setNewStory({ ...newStory, item_bought: e.target.value })}
+                placeholder="Contoh: Kamera Sony A6000"
+                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              />
+            </div>
+          </div>
 
-            {/* Statistik Ringkas Rating */}
-            <div className="bg-stone-900/80 border border-stone-700 rounded-2xl p-4 flex items-center gap-4 min-w-[180px] justify-center shadow-inner">
-              <div className="text-center">
-                <div className="text-3xl font-black text-amber-400">{averageRating}</div>
-                <div className="flex items-center justify-center gap-1 mt-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Rating (1-5)</label>
+              <select
+                value={newStory.rating}
+                onChange={(e) => setNewStory({ ...newStory, rating: parseInt(e.target.value) })}
+                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              >
+                <option value={5}>⭐⭐⭐⭐⭐ (Sangat Puas)</option>
+                <option value={4}>⭐⭐⭐⭐ (Puas)</option>
+                <option value={3}>⭐⭐⭐ (Cukup)</option>
+                <option value={2}>⭐⭐ (Kurang)</option>
+                <option value={1}>⭐ (Buruk)</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">URL Foto (Opsional)</label>
+              <input
+                type="url"
+                value={newStory.image_url}
+                onChange={(e) => setNewStory({ ...newStory, image_url: e.target.value })}
+                placeholder="https://example.com/foto.jpg"
+                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Cerita / Review</label>
+            <textarea
+              rows={4}
+              value={newStory.story}
+              onChange={(e) => setNewStory({ ...newStory, story: e.target.value })}
+              placeholder="Ceritakan pengalamanmu berbelanja di sini..."
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              required
+            ></textarea>
+          </div>
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full bg-indigo-600 text-white font-medium py-2.5 rounded-lg hover:bg-indigo-700 transition flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            <Send className="w-4 h-4" />
+            {submitting ? 'Mengirim...' : 'Kirim Cerita'}
+          </button>
+        </form>
+      </div>
+
+      {/* Daftar Cerita */}
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">Cerita dari Pembeli Lain</h2>
+      {loading ? (
+        <div className="text-center py-12 text-gray-500">Memuat cerita...</div>
+      ) : stories.length === 0 ? (
+        <div className="text-center py-12 text-gray-500 bg-white rounded-xl border border-gray-100">
+          Belum ada cerita pembeli. Jadilah yang pertama membagikannya!
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {stories.map((story) => (
+            <div key={story.id} className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="font-bold text-lg text-gray-900">{story.name}</h3>
+                  {story.item_bought && (
+                    <p className="text-sm text-indigo-600 font-medium">Membeli: {story.item_bought}</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-1">
                   {[...Array(5)].map((_, i) => (
-                    <Star 
-                      key={i} 
-                      size={14} 
-                      className={`${i < Math.round(Number(averageRating)) ? 'text-amber-400 fill-amber-400' : 'text-stone-600'}`} 
+                    <Star
+                      key={i}
+                      className={`w-4 h-4 ${
+                        i < story.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'
+                      }`}
                     />
                   ))}
                 </div>
-                <div className="text-xs text-stone-400 mt-1">{totalReviews} Ulasan Publik</div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Form Tulis Cerita / Beri Rating Cepat */}
-        <div className="bg-stone-800/80 border border-stone-700/80 rounded-2xl p-6 sm:p-8 mb-10 shadow-lg">
-          <h2 className="text-lg font-semibold text-stone-200 mb-4 flex items-center gap-2">
-            <MessageSquare size={20} className="text-amber-400" /> Tulis Cerita atau Beri Rating Kamu
-          </h2>
-
-          {successMsg && (
-            <div className="mb-4 p-4 bg-emerald-900/40 border border-emerald-700 text-emerald-300 rounded-xl text-sm">
-              {successMsg}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-stone-400 mb-1 uppercase tracking-wider">Nama Kamu (Opsional)</label>
-                <input 
-                  type="text"
-                  value={buyerName}
-                  onChange={(e) => setBuyerName(e.target.value)}
-                  placeholder="Contoh: Budi Santoso"
-                  className="w-full bg-stone-900 border border-stone-700 rounded-xl px-4 py-2.5 text-stone-100 text-sm focus:outline-none focus:border-amber-500 transition-colors"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-stone-400 mb-1 uppercase tracking-wider">Beri Rating Bintang</label>
-                <div className="flex items-center gap-1.5 py-2">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      type="button"
-                      key={star}
-                      className="focus:outline-none transition-transform hover:scale-110"
-                      onClick={() => setRating(star)}
-                      onMouseEnter={() => setHoverRating(star)}
-                      onMouseLeave={() => setHoverRating(0)}
-                    >
-                      <Star
-                        size={26}
-                        className={`${
-                          star <= (hoverRating || rating)
-                            ? 'text-amber-400 fill-amber-400'
-                            : 'text-stone-600'
-                        } transition-colors`}
-                      />
-                    </button>
-                  ))}
-                  <span className="ml-2 text-sm font-semibold text-amber-400">({rating}/5)</span>
+              <p className="text-gray-700 mb-4 whitespace-pre-line">{story.story}</p>
+              {story.image_url && (
+                <div className="mb-4">
+                  <img
+                    src={story.image_url}
+                    alt="Buyer story upload"
+                    className="max-h-64 rounded-lg object-cover border"
+                  />
                 </div>
+              )}
+              <div className="text-xs text-gray-400">
+                {new Date(story.created_at).toLocaleDateString('id-ID', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric'
+                })}
               </div>
             </div>
-
-            <div>
-              <label className="block text-xs font-medium text-stone-400 mb-1 uppercase tracking-wider">Cerita / Komentar (Opsional jika hanya ingin beri rating)</label>
-              <textarea 
-                rows="3"
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="Bagaimana pengalamanmu mengunjungi web ini? (Boleh dikosongkan jika hanya ingin mengirim rating bintang)"
-                className="w-full bg-stone-900 border border-stone-700 rounded-xl p-4 text-stone-100 text-sm focus:outline-none focus:border-amber-500 transition-colors resize-none"
-              ></textarea>
-            </div>
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full sm:w-auto px-6 py-3 bg-amber-500 hover:bg-amber-600 active:scale-95 text-stone-950 font-bold rounded-xl text-sm transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer disabled:opacity-50"
-            >
-              <Send size={16} /> {submitting ? 'Mengirim...' : 'Kirim Ulasan / Rating'}
-            </button>
-          </form>
+          ))}
         </div>
-
-        {/* Daftar Cerita & Ulasan */}
-        <div className="space-y-4">
-          <h3 className="text-xl font-bold text-stone-200 mb-4">Semua Ulasan Pengunjung</h3>
-
-          {loading ? (
-            <div className="text-center py-12 text-stone-500">Memuat cerita...</div>
-          ) : stories.length === 0 ? (
-            <div className="bg-stone-800/40 border border-stone-700/60 rounded-2xl p-12 text-center">
-              <MessageSquare size={48} className="mx-auto text-stone-600 mb-3" />
-              <p className="text-stone-400 font-medium">Belum ada cerita atau rating yang dibagikan.</p>
-              <p className="text-stone-500 text-sm mt-1">Jadilah yang pertama memberikan ulasan di web ini!</p>
-            </div>
-          ) : (
-            stories.map((story) => (
-              <div 
-                key={story.id} 
-                className="bg-stone-800/60 border border-stone-700/80 rounded-2xl p-5 sm:p-6 shadow-md hover:border-stone-600 transition-all"
-              >
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center font-bold text-amber-400 text-sm">
-                      {story.buyer_name ? story.buyer_name.charAt(0).toUpperCase() : 'P'}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-stone-200 text-sm sm:text-base">
-                        {story.buyer_name || 'Pengunjung Publik'}
-                      </h4>
-                      <span className="text-xs text-stone-500">
-                        {new Date(story.created_at).toLocaleDateString('id-ID', {
-                          day: 'numeric',
-                          month: 'long',
-                          year: 'numeric',
-                        })}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-1 bg-stone-900/60 px-3 py-1.5 rounded-full border border-stone-700/60">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        size={14}
-                        className={`${
-                          i < (story.rating || 5)
-                            ? 'text-amber-400 fill-amber-400'
-                            : 'text-stone-600'
-                        }`}
-                      />
-                    ))}
-                    <span className="text-xs font-bold text-amber-400 ml-1.5">{story.rating || 5}/5</span>
-                  </div>
-                </div>
-
-                <p className="text-stone-300 text-sm sm:text-base leading-relaxed pl-13 sm:pl-0">
-                  {story.comment}
-                </p>
-              </div>
-            ))
-          )}
-        </div>
-
-      </div>
+      )}
     </div>
   );
 }
