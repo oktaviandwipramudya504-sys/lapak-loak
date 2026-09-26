@@ -5,12 +5,12 @@ import { Star, MessageSquare, Send } from 'lucide-react';
 export default function BuyerStories() {
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
   const [newStory, setNewStory] = useState({
     name: '',
     item_bought: '',
     rating: 5,
-    story: '',
-    image_url: ''
+    story: ''
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -38,7 +38,7 @@ export default function BuyerStories() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!newStory.name || !newStory.story) {
-      alert('Nama dan cerita wajib diisi!');
+      alert('Nama dan ulasan wajib diisi!');
       return;
     }
 
@@ -54,14 +54,13 @@ export default function BuyerStories() {
         name: '',
         item_bought: '',
         rating: 5,
-        story: '',
-        image_url: ''
+        story: ''
       });
+      setShowForm(false);
       fetchStories();
-      alert('Cerita berhasil dibagikan!');
     } catch (error) {
       console.error('Error submitting story:', error.message);
-      alert('Gagal membagikan cerita. Silakan coba lagi.');
+      alert('Gagal mengirim ulasan.');
     } finally {
       setSubmitting(false);
     }
@@ -69,50 +68,52 @@ export default function BuyerStories() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      {/* Header Card */}
-      <div className="bg-[#fcf7ee] rounded-2xl shadow-xl p-6 mb-6 border-2 border-[#b58b53]">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Cerita Pembeli (Buyer Stories)</h1>
-        <p className="text-gray-700 text-sm">Bagikan pengalaman seru dan barang loak impian yang kamu dapatkan di sini!</p>
+      {/* Header & Tombol Beri Ulasan */}
+      <div className="bg-[#fcf7ee] rounded-2xl shadow-xl p-6 mb-6 border-2 border-[#b58b53] flex justify-between items-center flex-wrap gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">Cerita Pembeli (Buyer Stories)</h1>
+          <p className="text-gray-700 text-sm">Kumpulan ulasan dan pengalaman pembeli di Resonance TRILOGY.</p>
+        </div>
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="bg-[#a04010] hover:bg-[#8b350d] text-white font-semibold px-4 py-2 rounded-lg shadow transition border border-[#7a2e0a]"
+        >
+          {showForm ? 'Tutup Form' : '+ Beri Ulasan'}
+        </button>
       </div>
 
-      {/* Form Bagikan Cerita Card */}
-      <div className="bg-[#fcf7ee] rounded-2xl shadow-xl p-6 mb-10 border-2 border-[#b58b53]">
-        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <MessageSquare className="w-5 h-5 text-[#8b4513]" />
-          Tulis Cerita Belanjamu
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Form Input Ulasan (Muncul saat tombol diklik) */}
+      {showForm && (
+        <div className="bg-[#fcf7ee] rounded-2xl shadow-xl p-6 mb-8 border-2 border-[#b58b53]">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">Tulis Ulasan Kamu</h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-1">Nama Kamu</label>
+              <label className="block text-sm font-semibold text-gray-800 mb-1">Nama</label>
               <input
                 type="text"
                 value={newStory.name}
                 onChange={(e) => setNewStory({ ...newStory, name: e.target.value })}
-                placeholder="Contoh: Budi Santoso"
-                className="w-full px-3 py-2 bg-white border border-[#b58b53] rounded-md focus:ring-2 focus:ring-[#8b4513] focus:outline-none text-gray-800"
+                placeholder="Nama kamu"
+                className="w-full px-3 py-2 bg-white border border-[#b58b53] rounded-md text-gray-800 focus:outline-none"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-1">Barang yang Dibeli</label>
+              <label className="block text-sm font-semibold text-gray-800 mb-1">Barang yang Dibeli (Opsional)</label>
               <input
                 type="text"
                 value={newStory.item_bought}
                 onChange={(e) => setNewStory({ ...newStory, item_bought: e.target.value })}
-                placeholder="Contoh: Kamera Sony A6000"
-                className="w-full px-3 py-2 bg-white border border-[#b58b53] rounded-md focus:ring-2 focus:ring-[#8b4513] focus:outline-none text-gray-800"
+                placeholder="Contoh: Kamera / Barang Loak"
+                className="w-full px-3 py-2 bg-white border border-[#b58b53] rounded-md text-gray-800 focus:outline-none"
               />
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-1">Rating (1-5)</label>
+              <label className="block text-sm font-semibold text-gray-800 mb-1">Rating</label>
               <select
                 value={newStory.rating}
                 onChange={(e) => setNewStory({ ...newStory, rating: parseInt(e.target.value) })}
-                className="w-full px-3 py-2 bg-white border border-[#b58b53] rounded-md focus:ring-2 focus:ring-[#8b4513] focus:outline-none text-gray-800"
+                className="w-full px-3 py-2 bg-white border border-[#b58b53] rounded-md text-gray-800 focus:outline-none"
               >
                 <option value={5}>⭐⭐⭐⭐⭐ (Sangat Puas)</option>
                 <option value={4}>⭐⭐⭐⭐ (Puas)</option>
@@ -122,57 +123,44 @@ export default function BuyerStories() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-1">URL Foto (Opsional)</label>
-              <input
-                type="url"
-                value={newStory.image_url}
-                onChange={(e) => setNewStory({ ...newStory, image_url: e.target.value })}
-                placeholder="https://example.com/foto.jpg"
-                className="w-full px-3 py-2 bg-white border border-[#b58b53] rounded-md focus:ring-2 focus:ring-[#8b4513] focus:outline-none text-gray-800"
-              />
+              <label className="block text-sm font-semibold text-gray-800 mb-1">Ulasan / Cerita</label>
+              <textarea
+                rows={3}
+                value={newStory.story}
+                onChange={(e) => setNewStory({ ...newStory, story: e.target.value })}
+                placeholder="Ceritakan pengalamanmu..."
+                className="w-full px-3 py-2 bg-white border border-[#b58b53] rounded-md text-gray-800 focus:outline-none"
+                required
+              ></textarea>
             </div>
-          </div>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full bg-[#a04010] hover:bg-[#8b350d] text-white font-semibold py-2 rounded-lg shadow transition"
+            >
+              {submitting ? 'Menyimpan...' : 'Simpan Ulasan'}
+            </button>
+          </form>
+        </div>
+      )}
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-1">Cerita / Review</label>
-            <textarea
-              rows={4}
-              value={newStory.story}
-              onChange={(e) => setNewStory({ ...newStory, story: e.target.value })}
-              placeholder="Ceritakan pengalamanmu berbelanja di sini..."
-              className="w-full px-3 py-2 bg-white border border-[#b58b53] rounded-md focus:ring-2 focus:ring-[#8b4513] focus:outline-none text-gray-800"
-              required
-            ></textarea>
-          </div>
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full bg-[#a04010] hover:bg-[#8b350d] text-white font-semibold py-2.5 rounded-lg shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50 border border-[#7a2e0a]"
-          >
-            <Send className="w-4 h-4" />
-            {submitting ? 'Mengirim...' : 'Kirim Cerita'}
-          </button>
-        </form>
-      </div>
-
-      {/* Daftar Cerita Section */}
-      <h2 className="text-2xl font-bold text-white mb-6 drop-shadow-md">Cerita dari Pembeli Lain</h2>
+      {/* Daftar Ulasan */}
+      <h2 className="text-xl font-bold text-gray-900 mb-4">Ulasan Pembeli</h2>
       {loading ? (
-        <div className="text-center py-12 text-gray-800 bg-[#fcf7ee] rounded-2xl border-2 border-[#b58b53]">Memuat cerita...</div>
+        <div className="text-center py-12 text-gray-700 bg-[#fcf7ee] rounded-2xl border-2 border-[#b58b53]">Memuat ulasan...</div>
       ) : stories.length === 0 ? (
         <div className="text-center py-12 text-gray-700 bg-[#fcf7ee] rounded-2xl shadow-xl border-2 border-[#b58b53]">
-          Belum ada cerita pembeli. Jadilah yang pertama membagikannya!
+          Belum ada ulasan. Jadilah yang pertama memberikan ulasan!
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {stories.map((story) => (
-            <div key={story.id} className="bg-[#fcf7ee] rounded-2xl shadow-xl p-6 border-2 border-[#b58b53]">
-              <div className="flex justify-between items-start mb-4">
+            <div key={story.id} className="bg-[#fcf7ee] rounded-xl shadow p-5 border-2 border-[#b58b53]">
+              <div className="flex justify-between items-start mb-2">
                 <div>
-                  <h3 className="font-bold text-lg text-gray-900">{story.name}</h3>
+                  <h3 className="font-bold text-gray-900">{story.name || story.buyer_name}</h3>
                   {story.item_bought && (
-                    <p className="text-sm text-[#8b4513] font-semibold">Membeli: {story.item_bought}</p>
+                    <p className="text-xs text-[#8b4513] font-semibold">Membeli: {story.item_bought}</p>
                   )}
                 </div>
                 <div className="flex items-center gap-1">
@@ -186,22 +174,13 @@ export default function BuyerStories() {
                   ))}
                 </div>
               </div>
-              <p className="text-gray-800 mb-4 whitespace-pre-line leading-relaxed">{story.story}</p>
-              {story.image_url && (
-                <div className="mb-4">
-                  <img
-                    src={story.image_url}
-                    alt="Buyer story upload"
-                    className="max-h-64 rounded-lg object-cover border border-[#b58b53] shadow-sm"
-                  />
-                </div>
-              )}
-              <div className="text-xs text-gray-500 font-medium pt-3 border-t border-[#dfd3c3]">
-                {new Date(story.created_at).toLocaleDateString('id-ID', {
+              <p className="text-gray-800 text-sm whitespace-pre-line">{story.story || story.comment}</p>
+              <div className="text-xs text-gray-400 mt-3 pt-2 border-t border-[#dfd3c3]">
+                {story.created_at ? new Date(story.created_at).toLocaleDateString('id-ID', {
                   day: 'numeric',
                   month: 'long',
                   year: 'numeric'
-                })}
+                }) : ''}
               </div>
             </div>
           ))}
