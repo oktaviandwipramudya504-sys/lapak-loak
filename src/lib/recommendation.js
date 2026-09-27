@@ -77,3 +77,23 @@ export function getRecommendedItems(currentItem, allItems, limit = 3) {
 
   return filtered.slice(0, limit);
 }
+
+/**
+ * Membangun link tujuan yang benar untuk satu affiliate/iklan,
+ * tergantung tipe-nya: 'affiliate' (link keluar) atau 'request' (klik → WA admin)
+ * @param {Object} affiliate - Data affiliate dari tabel `affiliates`
+ */
+export function buildAffiliateLink(affiliate) {
+  if (!affiliate) return '#';
+
+  if (affiliate.type === 'request') {
+    const number = (affiliate.wa_number || '').replace(/\D/g, '').replace(/^0/, '62');
+    const message = affiliate.wa_message
+      ? affiliate.wa_message
+      : `Halo, saya mau minta dicarikan barang seperti: ${affiliate.title}`;
+    return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
+  }
+
+  // default: tipe affiliate (link keluar biasa)
+  return affiliate.affiliate_url || '#';
+}

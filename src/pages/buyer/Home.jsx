@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient.js';
 import Loader from '../../components/Loader';
+import { buildAffiliateLink } from '../../lib/recommendation.js';
 
 const FILTERS = ['Semua', 'Terbaru', 'Sedang Ramai', 'Banyak Ditawar', 'Di bawah 100rb'];
 
@@ -208,30 +209,15 @@ export default function Home() {
                       }}
                     >
                       {media.type === 'video' ? (
-                        <>
-                          <video
-                            src={media.url}
-                            muted
-                            playsInline
-                            preload="metadata"
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                          />
-                          <div
-                            style={{
-                              position: 'absolute',
-                              inset: 0,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: 40,
-                              color: '#fff',
-                              textShadow: '0 2px 6px rgba(0,0,0,0.6)',
-                              pointerEvents: 'none',
-                            }}
-                          >
-                            ▶
-                          </div>
-                        </>
+                        <video
+                          src={media.url}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          preload="metadata"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
                       ) : (
                         <img
                           src={media.url}
@@ -260,10 +246,14 @@ export default function Home() {
                 )}
               </div>
 
-              {/* Tombol Link Tujuan Iklan */}
-              {aff.affiliate_url && (
+              {/* Tombol Link Tujuan Iklan: 'request' -> WhatsApp, 'affiliate'/data lama -> link keluar */}
+              {(aff.type === 'request' ? aff.wa_number : aff.affiliate_url) && (
                 <a
-                  href={aff.affiliate_url.startsWith('http') ? aff.affiliate_url : `https://${aff.affiliate_url}`}
+                  href={
+                    aff.type === 'request'
+                      ? buildAffiliateLink(aff)
+                      : (aff.affiliate_url.startsWith('http') ? aff.affiliate_url : `https://${aff.affiliate_url}`)
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
@@ -281,7 +271,7 @@ export default function Home() {
                     borderRadius: '4px'
                   }}
                 >
-                  Cek Link Di Sini
+                  {aff.type === 'request' ? 'Chat Admin Sekarang' : 'Cek Link Di Sini'}
                 </a>
               )}
             </div>

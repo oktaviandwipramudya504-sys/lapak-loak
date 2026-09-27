@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient.js';
 import Loader from '../../components/Loader';
-import { getRecommendedItems } from '../../lib/recommendation.js';
+import { getRecommendedItems, buildAffiliateLink } from '../../lib/recommendation.js';
 
 export default function ItemDetail() {
   const { itemId } = useParams();
   const navigate = useNavigate();
   const [item, setItem] = useState(null);
   const [recommendations, setRecommendations] = useState([]);
+  const [affiliateAds, setAffiliateAds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [buyerName, setBuyerName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
@@ -49,6 +50,17 @@ export default function ItemDetail() {
         if (!listError && allItems) {
           const similar = getRecommendedItems(currentItem, allItems, 3);
           setRecommendations(similar);
+        }
+
+        // 4. Ambil iklan affiliate/request untuk ditampilkan di papan iklan
+        const { data: ads, error: adsError } = await supabase
+          .from('affiliates')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        if (!adsError && ads) {
+          setAffiliateAds(ads);
         }
       } catch (err) {
         console.error('Gagal memuat detail barang:', err);
@@ -354,6 +366,59 @@ export default function ItemDetail() {
           </div>
         )}
       </div>
+
+      {/* Bagian Papan Iklan Affiliate */}
+      {affiliateAds.length > 0 && (
+        <div style={{ marginTop: 32, borderTop: '1px solid #D8C3A5', paddingTop: 20 }}>
+          <h2 style={{ fontSize: 15, fontWeight: '800', color: '#f6f3f1', marginBottom: 12 }}>
+            Cari Barang Lain? 📌
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {affiliateAds.map((ad) => {
+              const adPhotos = ad.photos ?? [];
+              const link = buildAffiliateLink(ad);
+              return (
+                <a
+                  key={ad.id}
+                  href={link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="card"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: 10,
+                    background: '#FFF',
+                    border: '1px solid #8C755B',
+                    borderRadius: 8,
+                    textDecoration: 'none',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, overflow: 'hidden' }}>
+                    {adPhotos[0] ? (
+                      <img src={adPhotos[0]} alt={ad.title} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 6 }} />
+                    ) : (
+                      <div style={{ width: 48, height: 48, background: '#D8C3A5', borderRadius: 6 }} />
+                    )}
+                    <div style={{ overflow: 'hidden' }}>
+                      <h3 style={{ fontSize: 13, fontWeight: '700', margin: 0, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                        {ad.title}
+                      </h3>
+                      <p style={{ fontSize: 11, color: '#8C755B', margin: '2px 0 0 0' }}>
+                        {ad.type === 'request' ? 'Minta dicarikan via WhatsApp' : 'Lihat produk'}
+                      </p>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: '800', color: 'var(--terracotta)', whiteSpace: 'nowrap' }}>
+                    {ad.type === 'request' ? 'Chat WA →' : 'Lihat →'}
+                  </span>
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
